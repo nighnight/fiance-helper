@@ -1,75 +1,83 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>添加账户</title>
-    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <title>新增账户</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<div th:replace="common/header :: header"></div>
+<body class="bg-light">
 
-<div class="container mt-4">
-    <h2 class="mb-4">添加新账户</h2>
+<div class="container mt-5">
+    <div class="card mx-auto shadow-sm" style="max-width: 500px;">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0">新增账户</h5>
+        </div>
+        <div class="card-body">
+            <form id="addForm">
+                <div class="mb-3">
+                    <label class="form-label">账户名称 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="accountName" placeholder="例如：招商工资卡" required>
+                </div>
 
-    <div class="form-card">
-        <form id="addAccountForm" th:object="${accountDTO}">
-            <div class="form-group">
-                <label for="accountName">账户名称</label>
-                <input type="text" class="form-control" id="accountName" th:field="*{accountName}" placeholder="如：工资卡、支付宝" required>
-            </div>
-            <div class="form-group">
-                <label for="accountType">账户类型</label>
-                <select class="form-control" id="accountType" th:field="*{accountType}" required>
-                    <option value="">请选择账户类型</option>
-                    <option value="银行卡">银行卡</option>
-                    <option value="支付宝">支付宝</option>
-                    <option value="微信支付">微信支付</option>
-                    <option value="现金">现金</option>
-                    <option value="信用卡">信用卡</option>
-                    <option value="投资账户">投资账户</option>
-                    <!-- 可以添加更多类型 -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="initialBalance">初始余额</label>
-                <input type="number" step="0.01" class="form-control" id="initialBalance" th:field="*{initialBalance}" value="0.00" required>
-            </div>
-            <div class="form-group">
-                <label for="remark">备注 (可选)</label>
-                <textarea class="form-control" id="remark" th:field="*{remark}" rows="3"></textarea>
-            </div>
-            <div class="form-group text-center mt-4">
-                <button type="submit" class="btn btn-primary">添加账户</button>
-                <a th:href="@{/account/list}" class="btn btn-secondary ml-3">取消</a>
-            </div>
-        </form>
+                <div class="mb-3">
+                    <label class="form-label">账户类型</label>
+                    <select class="form-select" name="accountType">
+                        <option value="微信">微信</option>
+                        <option value="支付宝">支付宝</option>
+                        <option value="银行卡">银行卡</option>
+                        <option value="现金">现金</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">初始余额</label>
+                    <input type="number" class="form-control" name="initialBalance" value="0" step="0.01">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">备注</label>
+                    <textarea class="form-control" name="remark" rows="3"></textarea>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="/account/index" class="btn btn-light me-md-2">取消</a>
+                    <button type="button" class="btn btn-primary" onclick="submitAdd()">保存</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<div th:replace="common/footer :: footer"></div>
-
-<script th:src="@{/static/lib/jquery.min.js}"></script>
-<script th:src="@{/static/lib/bootstrap.min.js}"></script>
-<script th:src="@{/static/js/common.js}"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script>
-    $(function() {
-        $('#addAccountForm').submit(function(e) {
-            e.preventDefault();
-            let accountData = {
-                accountName: $('#accountName').val(),
-                accountType: $('#accountType').val(),
-                initialBalance: parseFloat($('#initialBalance').val()),
-                remark: $('#remark').val()
-            };
+    function submitAdd() {
+        var data = {
+            accountName: $('input[name="accountName"]').val(),
+            accountType: $('select[name="accountType"]').val(),
+            initialBalance: $('input[name="initialBalance"]').val(),
+            remark: $('textarea[name="remark"]').val()
+        };
 
-            sendAjaxRequest('/account/api/add', 'POST', accountData, function() {
-                showMessage('账户添加成功！', 'success');
-                window.location.href = '/account/list'; // 添加成功后跳转回列表
-            });
+        if(!data.accountName) {
+            alert("请填写账户名称");
+            return;
+        }
+
+        $.ajax({
+            url: '/account', // POST
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+                if(res.code === 200) {
+                    window.location.href = '/account/index';
+                } else {
+                    alert("操作失败：" + res.msg);
+                }
+            }
         });
-    });
+    }
 </script>
 </body>
 </html>

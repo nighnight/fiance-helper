@@ -1,79 +1,118 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>用户登录</title>
-    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <title>用户登录 - 财务助手</title>
+    <!-- 引入 Bootstrap 5 CSS -->
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
+            background-color: #f0f2f5;
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
-            background-color: #f7f9fc;
+            margin: 0;
         }
-        .login-container {
+        .login-card {
+            width: 100%;
             max-width: 400px;
-            padding: 40px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            background: white;
         }
-        .login-container h2 {
-            margin-bottom: 30px;
+        .login-header {
             text-align: center;
+            margin-bottom: 2rem;
+        }
+        .login-header h3 {
             color: #333;
-        }
-        .form-group label {
-            font-weight: 500;
-        }
-        .btn-block {
-            padding: 10px 15px;
-            font-size: 1.1em;
-        }
-        .text-center a {
-            color: #007bff;
-            text-decoration: none;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-<div class="login-container">
-    <h2 class="text-center">个人财务助手登录</h2>
+
+<div class="login-card">
+    <div class="login-header">
+        <h3>💰 财务助手</h3>
+        <p class="text-muted">请登录您的账户</p>
+    </div>
+
     <form id="loginForm">
-        <div class="form-group">
-            <label for="username">用户名</label>
-            <input type="text" class="form-control" id="username" name="username" placeholder="请输入用户名" required>
+        <div class="mb-3">
+            <label class="form-label">用户名</label>
+            <input type="text" class="form-control form-control-lg" name="username" placeholder="请输入用户名" required>
         </div>
-        <div class="form-group">
-            <label for="password">密码</label>
-            <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+
+        <div class="mb-4">
+            <label class="form-label">密码</label>
+            <input type="password" class="form-control form-control-lg" name="password" placeholder="请输入密码" required>
         </div>
-        <button type="submit" class="btn btn-primary btn-block mt-4">登录</button>
+
+        <div class="d-grid gap-2">
+            <button type="button" class="btn btn-primary btn-lg" onclick="submitLogin()">立即登录</button>
+        </div>
+
+        <div class="mt-4 text-center">
+            <span class="text-muted">还没有账号？</span>
+            <a href="/user/register" class="text-decoration-none fw-bold">去注册</a>
+        </div>
     </form>
-    <p class="text-center mt-3">
-        还没有账号？ <a th:href="@{/user/register}">立即注册</a>
-    </p>
 </div>
 
-<script th:src="@{/static/lib/jquery.min.js}"></script>
-<script th:src="@{/static/lib/bootstrap.min.js}"></script>
-<script th:src="@{/static/js/common.js}"></script>
+<!-- 引入 jQuery -->
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script>
-    $(function() {
-        $('#loginForm').submit(function(e) {
-            e.preventDefault();
-            let username = $('#username').val();
-            let password = $('#password').val();
-
-            sendAjaxRequest('/user/api/login', 'POST', { username: username, password: password }, function(data) {
-                showMessage('登录成功，欢迎回来！', 'success');
-                window.location.href = '/'; // 登录成功后跳转到首页
-            });
-        });
+    // 监听回车键
+    $(document).keyup(function(event) {
+        if (event.keyCode === 13) {
+            submitLogin();
+        }
     });
+
+    function submitLogin() {
+        // 1. 获取表单数据
+        var username = $("input[name='username']").val().trim();
+        var password = $("input[name='password']").val().trim();
+
+        // 2. 简单校验
+        if(!username) {
+            alert("请输入用户名");
+            return;
+        }
+        if(!password) {
+            alert("请输入密码");
+            return;
+        }
+
+        var data = {
+            username: username,
+            password: password
+        };
+
+        // 3. 发送 AJAX 请求
+        $.ajax({
+            url: '/user/login',  // 对应后端 @PostMapping("/login")
+            type: 'POST',        // 必须是 POST
+            contentType: 'application/json', // 必须声明 JSON 类型
+            data: JSON.stringify(data),      // 将对象转为 JSON 字符串
+            success: function(res) {
+                if(res.code === 200) {
+                    // 登录成功，跳转到首页
+                    window.location.href = '/';
+                } else {
+                    // 登录失败，显示后端返回的错误信息
+                    alert(res.msg);
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("Login Error:", xhr.responseText);
+                alert("系统错误，请检查控制台日志");
+            }
+        });
+    }
 </script>
 </body>
 </html>

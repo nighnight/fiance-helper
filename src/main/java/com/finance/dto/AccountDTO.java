@@ -1,21 +1,25 @@
 package com.finance.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
 import java.math.BigDecimal;
 
 @Data
+@Schema(description = "账户传输对象")
 public class AccountDTO {
-    private Long id; // 用于更新时
-    @NotBlank(message = "账户名称不能为空")
+
+    @Schema(description = "账户ID (修改时必传)")
+    private Long id;
+
+    @Schema(description = "账户名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String accountName;
-    @NotBlank(message = "账户类型不能为空")
+
+    @Schema(description = "账户类型 (微信/支付宝/银行卡/现金)")
     private String accountType;
-    @NotNull(message = "初始余额不能为空")
-    @DecimalMin(value = "0.00", message = "初始余额不能小于0")
+
+    @Schema(description = "初始余额")
     private BigDecimal initialBalance;
+
+    @Schema(description = "备注")
     private String remark;
 }

@@ -1,118 +1,65 @@
 package com.finance.service.impl;
 
-import com.finance.dto.UserLoginDTO;
-import com.finance.dto.UserRegisterDTO;
-import com.finance.exception.BusinessException;
 import com.finance.mapper.SysUserMapper;
 import com.finance.po.SysUser;
 import com.finance.service.SysUserService;
-import com.finance.vo.LoginUserVO;
+import com.finance.util.Result;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder; // 引入Spring Security的PasswordEncoder
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Service
 public class SysUserServiceImpl implements SysUserService {
 
     @Autowired
     private SysUserMapper sysUserMapper;
-    @Autowired
-    private BCryptPasswordEncoder passwordEncoder; // 注入密码编码器
-    @Autowired
-    private HttpSession session; // 注入HttpSession
+
+    // 使用 BCrypt 进行密码加密
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     @Override
-    public LoginUserVO login(UserLoginDTO userLoginDTO) {
-        SysUser user = sysUserMapper.selectByUsername(userLoginDTO.getUsername());
-        if (user == null || !passwordEncoder.matches(userLoginDTO.getPassword(), user.getPassword())) {
-            throw new BusinessException("用户名或密码错误");
-        }
-        if (user.getStatus() == 0) {
-            throw new BusinessException("用户已被禁用，请联系管理员");
-        }
+    public Result login(String username, String password, HttpSession session) {
+        // 1. 查询用户
+        SysUser user = sysUserMapper.selectByUsername(username);
 
-        LoginUserVO loginUserVO = new LoginUserVO();
-        BeanUtils.copyProperties(user, loginUserVO);
-        // 将登录用户信息存储到session
-        session.setAttribute("loginUser", loginUserVO);
-        return loginUserVO;
-    }
-
-    @Override
-    public void register(UserRegisterDTO userRegisterDTO) {
-        // 1. 检查密码和确认密码是否一致
-        if (!userRegisterDTO.getPassword().equals(userRegisterDTO.getConfirmPassword())) {
-            throw new BusinessException("两次输入的密码不一致");
-        }
-
-        // 2. 检查用户名是否已存在
-        SysUser existingUser = sysUserMapper.selectByUsername(userRegisterDTO.getUsername());
-        if (existingUser != null) {
-            throw new BusinessException("用户名已存在");
-        }
-
-        // 3. 构建用户PO并保存
-        SysUser newUser = new SysUser();
-        newUser.setUsername(userRegisterDTO.getUsername());
-        // newUser.setPassword(MD5Util.md5(userRegisterDTO.getPassword())); // 使用BCrypt替代
-        newUser.setPassword(passwordEncoder.encode(userRegisterDTO.getPassword())); // 密码加密
-        newUser.setNickname(userRegisterDTO.getUsername()); // 默认昵称与用户名相同
-        newUser.setCreateTime(LocalDateTime.now());
-        newUser.setUpdateTime(LocalDateTime.now());
-        newUser.setStatus(1); // 默认正常状态
-
-        int result = sysUserMapper.insert(newUser);
-        if (result != 1) {
-            throw new BusinessException("注册失败，请稍后再试");
-        }
-    }
-
-    @Override
-    public SysUser getUserById(Long userId) {
-        return sysUserMapper.selectByPrimaryKey(userId);
-    }
-
-    @Override
-    public void updateUserInfo(SysUser user) {
-        SysUser existingUser = sysUserMapper.selectByPrimaryKey(user.getId());
-        if (existingUser == null) {
-            throw new BusinessException("用户不存在");
-        }
-        existingUser.setNickname(user.getNickname());
-        existingUser.setPhone(user.getPhone());
-        existingUser.setEmail(user.getEmail());
-        existingUser.setUpdateTime(LocalDateTime.now());
-        // 用户名不允许通过此接口修改
-        sysUserMapper.updateByPrimaryKeySelective(existingUser);
-    }
-
-    @Override
-    public void updatePassword(Long userId, String oldPassword, String newPassword) {
-        SysUser user = sysUserMapper.selectByPrimaryKey(userId);
+        // 2. 校验用户是否存在
         if (user == null) {
-            throw new BusinessException("用户不存在");
+            return Result.error("用户不存在");
         }
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
-            throw new BusinessException("原密码不正确");
+
+        // 3. 校验密码 (数据库存的是密文，需要用 matches 方法比对)
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            return Result.error("密码错误");
         }
-        // 确保新密码符合规则，这里可以再次校验DTO中的Pattern
-        String encodedNewPassword = passwordEncoder.encode(newPassword);
-        user.setPassword(encodedNewPassword);
-        user.setUpdateTime(LocalDateTime.now());
-        sysUserMapper.updateByPrimaryKeySelective(user);
+
+        // 4. 登录成功，存入 Session
+        // 注意：生产环境不要把密码存入Session，这里清空一下
+        user.setPassword(null);
+        session.setAttribute("USER_SESSION", user);
+
+        return Result.success("登录成功");
     }
 
     @Override
-    public void logout(Long userId) {
-        // 清理session中的用户数据
-        if (session != null) {
-            session.removeAttribute("loginUser");
-            session.invalidate(); // 使整个session失效
+    public Result register(SysUser sysUser) {
+        // 1. 检查用户名是否已存在
+        SysUser existUser = sysUserMapper.selectByUsername(sysUser.getUsername());
+        if (existUser != null) {
+            return Result.error("用户名已存在");
         }
+
+        // 2. 密码加密
+        String encodedPassword = passwordEncoder.encode(sysUser.getPassword());
+        sysUser.setPassword(encodedPassword);
+
+        // 3. 设置默认昵称（如果没填）
+        if (sysUser.getNickname() == null || sysUser.getNickname().isEmpty()) {
+            sysUser.setNickname("用户" + System.currentTimeMillis());
+        }
+
+        // 4. 插入数据库
+        sysUserMapper.insert(sysUser);
+        return Result.success("注册成功");
     }
 }

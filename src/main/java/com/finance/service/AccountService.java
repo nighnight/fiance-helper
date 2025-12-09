@@ -1,18 +1,13 @@
 package com.finance.service;
-
 import com.finance.dto.AccountDTO;
 import com.finance.po.Account;
-import com.finance.vo.AccountVO;
-
-import java.math.BigDecimal;
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 
 public interface AccountService {
-    void addAccount(Long userId, AccountDTO accountDTO);
-    void updateAccount(Long userId, AccountDTO accountDTO);
-    void deleteAccount(Long userId, Long accountId);
-    AccountVO getAccountById(Long userId, Long accountId);
-    List<AccountVO> getAccountsByUserId(Long userId);
-    void updateAccountBalance(Long accountId, BigDecimal amount); // 用于收支记录增删改
-    BigDecimal getTotalAssets(Long userId);
+    List<Account> getList(HttpSession session);
+    void addAccount(AccountDTO accountDTO, HttpSession session);
+    Account getById(Long id);
+    void updateAccount(AccountDTO accountDTO);
+    void deleteAccount(Long id);
 }

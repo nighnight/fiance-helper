@@ -1,44 +1,66 @@
 package com.finance.util;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 import java.io.Serializable;
 
-// 通用API返回结果
 @Data
+@Schema(description = "后端统一返回结果")
 public class Result<T> implements Serializable {
-    private static final long serialVersionUID = 1L;
 
-    private Integer code; // 业务码，200成功，其他失败
-    private String msg;   // 提示信息
-    private T data;       // 业务数据
+    @Schema(description = "编码：200成功，500和其他数字为失败")
+    private Integer code;
 
-    public Result() {
-    }
+    @Schema(description = "错误信息")
+    private String msg;
 
-    public Result(Integer code, String msg, T data) {
-        this.code = code;
-        this.msg = msg;
-        this.data = data;
-    }
+    @Schema(description = "数据")
+    private T data;
 
+    // --- 成功响应的方法 ---
+
+    /**
+     * 成功，无返回数据
+     */
     public static <T> Result<T> success() {
-        return new Result<>(200, "操作成功", null);
+        Result<T> result = new Result<>();
+        result.code = 200;
+        result.msg = "操作成功";
+        return result;
     }
 
+    /**
+     * 成功，返回数据
+     */
     public static <T> Result<T> success(T data) {
-        return new Result<>(200, "操作成功", data);
+        Result<T> result = new Result<>();
+        result.code = 200;
+        result.msg = "操作成功";
+        result.data = data;
+        return result;
     }
 
+    /**
+     * 成功，自定义消息（一般比较少用，但保留兼容性）
+     */
     public static <T> Result<T> success(String msg, T data) {
-        return new Result<>(200, msg, data);
+        Result<T> result = new Result<>();
+        result.code = 200;
+        result.msg = msg;
+        result.data = data;
+        return result;
     }
 
-    public static <T> Result<T> error(Integer code, String msg) {
-        return new Result<>(code, msg, null);
-    }
+    // --- 失败响应的方法 ---
 
+    /**
+     * 失败，自定义错误信息
+     */
     public static <T> Result<T> error(String msg) {
-        return new Result<>(500, msg, null);
+        Result<T> result = new Result<>();
+        result.code = 500;
+        result.msg = msg;
+        return result;
     }
 }
