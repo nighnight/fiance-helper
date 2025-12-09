@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <!-- 其他头部元素 -->
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" th:fragment="header">
+    <a class="navbar-brand" th:href="@{/}">个人财务助手</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/}">首页</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/record/list}">收支记录</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/account/list}">账户管理</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/category/list}">类别管理</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/budget/list}">预算设置</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/chart/analysis}">财务分析</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" th:href="@{/sync/page}">数据同步</a>
+            </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span th:if="${session.loginUser != null}" th:text="${session.loginUser.nickname}">用户</span>
+                    <span th:if="${session.loginUser == null}">访客</span>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                    <a class="dropdown-item" th:href="@{/user/info}">个人信息</a>
+                    <a class="dropdown-item" th:href="@{/user/changePwd}">修改密码</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" th:href="@{/user/logout}">退出登录</a>
+                </div>
+            </li>
+        </ul>
+    </div>
+</nav>
+</body>
+</html>

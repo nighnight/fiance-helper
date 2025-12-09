@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修改密码</title>
+    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+</head>
+<body>
+<div th:replace="common/header :: header"></div>
+
+<div class="container mt-4">
+    <h2 class="mb-4">修改密码</h2>
+
+    <div class="form-card">
+        <form id="changePwdForm">
+            <div class="form-group">
+                <label for="oldPassword">原密码</label>
+                <input type="password" class="form-control" id="oldPassword" name="oldPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">新密码</label>
+                <input type="password" class="form-control" id="newPassword" name="newPassword" placeholder="8-18位，包含大小写字母和数字" required>
+            </div>
+            <div class="form-group">
+                <label for="confirmNewPassword">确认新密码</label>
+                <input type="password" class="form-control" id="confirmNewPassword" name="confirmNewPassword" required>
+            </div>
+            <div class="form-group text-center mt-4">
+                <button type="submit" class="btn btn-primary">确认修改</button>
+                <a th:href="@{/user/info}" class="btn btn-secondary ml-3">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer"></div>
+
+<script th:src="@{/static/lib/jquery.min.js}"></script>
+<script th:src="@{/static/lib/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/common.js}"></script>
+<script>
+    $(function() {
+        $('#changePwdForm').submit(function(e) {
+            e.preventDefault();
+            let oldPassword = $('#oldPassword').val();
+            let newPassword = $('#newPassword').val();
+            let confirmNewPassword = $('#confirmNewPassword').val();
+
+            if (newPassword !== confirmNewPassword) {
+                showMessage('两次输入的新密码不一致！', 'error');
+                return;
+            }
+
+            sendAjaxRequest('/user/api/changePassword', 'POST', {
+                oldPassword: oldPassword,
+                newPassword: newPassword,
+                confirmNewPassword: confirmNewPassword
+            }, function() {
+                showMessage('密码修改成功，请重新登录！', 'success');
+                window.location.href = '/user/login'; // 修改密码后强制重新登录
+            });
+        });
+    });
+</script>
+</body>
+</html>

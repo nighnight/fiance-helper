@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户注册</title>
+    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f7f9fc;
+        }
+        .register-container {
+            max-width: 450px;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .register-container h2 {
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+        .form-group label {
+            font-weight: 500;
+        }
+        .btn-block {
+            padding: 10px 15px;
+            font-size: 1.1em;
+        }
+        .text-center a {
+            color: #007bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="register-container">
+    <h2 class="text-center">注册个人财务助手</h2>
+    <form id="registerForm">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" class="form-control" id="username" name="username" placeholder="4-16位（字母，数字，下划线，减号）" required>
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="8-18位，包含大小写字母和数字" required>
+        </div>
+        <div class="form-group">
+            <label for="confirmPassword">确认密码</label>
+            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" placeholder="请再次输入密码" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mt-4">注册</button>
+    </form>
+    <p class="text-center mt-3">
+        已有账号？ <a th:href="@{/user/login}">立即登录</a>
+    </p>
+</div>
+
+<script th:src="@{/static/lib/jquery.min.js}"></script>
+<script th:src="@{/static/lib/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/common.js}"></script>
+<script>
+    $(function() {
+        $('#registerForm').submit(function(e) {
+            e.preventDefault();
+            let username = $('#username').val();
+            let password = $('#password').val();
+            let confirmPassword = $('#confirmPassword').val();
+
+            if (password !== confirmPassword) {
+                showMessage('两次输入的密码不一致！', 'error');
+                return;
+            }
+
+            sendAjaxRequest('/user/api/register', 'POST', { username: username, password: password, confirmPassword: confirmPassword }, function() {
+                showMessage('注册成功，请登录！', 'success');
+                window.location.href = '/user/login'; // 注册成功后跳转到登录页
+            });
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.mapper.SysUserMapper">
+
+    <resultMap id="BaseResultMap" type="com.finance.po.SysUser">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="password" jdbcType="VARCHAR" property="password"/>
+        <result column="nickname" jdbcType="VARCHAR" property="nickname"/>
+        <result column="phone" jdbcType="VARCHAR" property="phone"/>
+        <result column="email" jdbcType="VARCHAR" property="email"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="status" jdbcType="TINYINT" property="status"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, username, password, nickname, phone, email, create_time, update_time, status
+    </sql>
+
+    <insert id="insert" parameterType="com.finance.po.SysUser" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `sys_user` (username, password, nickname, phone, email, create_time, update_time, status)
+        VALUES (#{username}, #{password}, #{nickname}, #{phone}, #{email}, #{createTime}, #{updateTime}, #{status})
+    </insert>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `sys_user`
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByUsername" parameterType="java.lang.String" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `sys_user`
+        WHERE username = #{username}
+    </select>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.finance.po.SysUser">
+        UPDATE `sys_user`
+        <set>
+            <if test="password != null">
+                password = #{password},
+            </if>
+            <if test="nickname != null">
+                nickname = #{nickname},
+            </if>
+            <if test="phone != null">
+                phone = #{phone},
+            </if>
+            <if test="email != null">
+                email = #{email},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            update_time = #{updateTime}
+        </set>
+        WHERE id = #{id}
+    </update>
+</mapper>

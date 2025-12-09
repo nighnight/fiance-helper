@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据同步</title>
+    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+</head>
+<body>
+<div th:replace="common/header :: header"></div>
+
+<div class="container mt-4">
+    <h2 class="mb-4">数据同步 (离线存储适配)</h2>
+
+    <div class="alert alert-info" role="alert">
+        此页面用于管理数据的同步状态。实际的离线存储和增量同步逻辑通常需要结合前端 Service Worker 和 IndexedDB 实现。
+        这里展示的是后端同步标记的更新。
+    </div>
+
+    <div class="data-table">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>数据类型</th>
+                <th>上次同步时间</th>
+                <th>已同步最大ID</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr id="syncRowRecord">
+                <td class="sync-type">收支记录</td>
+                <td class="last-sync-time" th:text="${recordSync != null ? #temporals.format(recordSync.lastSyncTime, 'yyyy-MM-dd HH:mm:ss') : 'N/A'}">N/A</td>
+                <td class="max-sync-id" th:text="${recordSync != null ? recordSync.maxSyncId : '0'}">0</td>
+                <td>
+                    <button class="btn btn-sm btn-primary sync-button" data-sync-type="record">更新同步标记</button>
+                    <!-- <button class="btn btn-sm btn-outline-info pull-button" data-sync-type="record">拉取增量数据</button> -->
+                </td>
+            </tr>
+            <tr id="syncRowAccount">
+                <td class="sync-type">账户</td>
+                <td class="last-sync-time" th:text="${accountSync != null ? #temporals.format(accountSync.lastSyncTime, 'yyyy-MM-dd HH:mm:ss') : 'N/A'}">N/A</td>
+                <td class="max-sync-id" th:text="${accountSync != null ? accountSync.maxSyncId : '0'}">0</td>
+                <td>
+                    <button class="btn btn-sm btn-primary sync-button" data-sync-type="account">更新同步标记</button>
+                </td>
+            </tr>
+            <tr id="syncRowCategory">
+                <td class="sync-type">类别</td>
+                <td class="last-sync-time" th:text="${categorySync != null ? #temporals.format(categorySync.lastSyncTime, 'yyyy-MM-dd HH:mm:ss') : 'N/A'}">N/A</td>
+                <td class="max-sync-id" th:text="${categorySync != null ? categorySync.maxSyncId : '0'}">0</td>
+                <td>
+                    <button class="btn btn-sm btn-primary sync-button" data-sync-type="category">更新同步标记</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="card-title">离线数据管理 (前端功能提示)</h5>
+            <p>
+                为了实现真正的离线使用，您需要在前端使用以下技术：
+            <ul>
+                <li><strong>Service Worker:</strong> 拦截网络请求，缓存静态资源和API响应。</li>
+                <li><strong>IndexedDB:</strong> 在客户端浏览器中存储大量的结构化数据，用于离线保存用户的收支记录、账户和类别等核心数据。</li>
+                <li><strong>Background Synchronization API:</strong> 在网络恢复时自动进行数据同步。</li>
+            </ul>
+            当用户在线时，前端会定期向后端请求增量数据，并更新本地IndexedDB。
+            当用户进行操作时，先更新本地IndexedDB，然后尝试发送到后端。如果网络不佳或离线，则将操作存储在待同步队列中，等待网络恢复后自动同步。
+            </p>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer"></div>
+
+<script th:src="@{/static/lib/jquery.min.js}"></script>
+<script th:src="@{/static/lib/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/common.js}"></script>
+<script th:src="@{/static/js/sync.js}"></script>
+</body>
+</html>

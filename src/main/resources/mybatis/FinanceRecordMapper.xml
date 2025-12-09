@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.mapper.FinanceRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.finance.po.FinanceRecord">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="amount" jdbcType="DECIMAL" property="amount"/>
+        <result column="type" jdbcType="TINYINT" property="type"/>
+        <result column="category_id" jdbcType="BIGINT" property="categoryId"/>
+        <result column="account_id" jdbcType="BIGINT" property="accountId"/>
+        <result column="record_date" jdbcType="DATE" property="recordDate"/>
+        <result column="remark" jdbcType="VARCHAR" property="remark"/>
+        <result column="voucher_url" jdbcType="VARCHAR" property="voucherUrl"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, amount, type, category_id, account_id, record_date, remark, voucher_url, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.finance.po.FinanceRecord" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `finance_record` (user_id, amount, type, category_id, account_id, record_date, remark, voucher_url, create_time, update_time)
+        VALUES (#{userId}, #{amount}, #{type}, #{categoryId}, #{accountId}, #{recordDate}, #{remark}, #{voucherUrl}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectByPrimaryKey" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `finance_record`
+        WHERE id = #{id} AND user_id = #{userId}
+    </select>
+
+    <select id="selectByUserId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `finance_record`
+        WHERE user_id = #{userId}
+        ORDER BY record_date DESC, create_time DESC
+    </select>
+
+    <select id="selectByUserIdAndDateRange" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `finance_record`
+        WHERE user_id = #{userId}
+        <if test="startDate != null">
+            AND record_date &gt;= #{startDate}
+        </if>
+        <if test="endDate != null">
+            AND record_date &lt;= #{endDate}
+        </if>
+        <if test="type != null">
+            AND type = #{type}
+        </if>
+        <if test="categoryId != null">
+            AND category_id = #{categoryId}
+        </if>
+        <if test="accountId != null">
+            AND account_id = #{accountId}
+        </if>
+        ORDER BY record_date DESC, create_time DESC
+    </select>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.finance.po.FinanceRecord">
+        UPDATE `finance_record`
+        <set>
+            <if test="amount != null">
+                amount = #{amount},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="accountId != null">
+                account_id = #{accountId},
+            </if>
+            <if test="recordDate != null">
+                record_date = #{recordDate},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+            <if test="voucherUrl != null">
+                voucher_url = #{voucherUrl},
+            </if>
+            update_time = #{updateTime}
+        </set>
+        WHERE id = #{id} AND user_id = #{userId}
+    </update>
+
+    <delete id="deleteByPrimaryKey">
+        DELETE FROM `finance_record`
+        WHERE id = #{id} AND user_id = #{userId}
+    </delete>
+
+    <!-- 统计指定月份的收入、支出 -->
+    <select id="sumAmountByUserIdAndTypeAndMonth" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0.00)
+        FROM `finance_record`
+        WHERE user_id = #{userId}
+          AND type = #{type}
+          AND DATE_FORMAT(record_date, '%Y-%m') = #{yearMonth}
+    </select>
+
+    <!-- 统计指定时间段内，按月份的收入支出趋势 -->
+    <select id="getMonthlyTrendByUserId" resultType="java.util.Map">
+        SELECT
+            DATE_FORMAT(record_date, '%Y-%m') AS month,
+            type,
+            SUM(amount) AS total_amount
+        FROM `finance_record`
+        WHERE user_id = #{userId}
+          AND record_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY DATE_FORMAT(record_date, '%Y-%m'), type
+        ORDER BY month, type
+    </select>
+
+    <!-- 统计指定时间段内，按支出类别汇总 -->
+    <select id="getExpenseCategorySummaryByUserId" resultType="java.util.Map">
+        SELECT
+        category_id,
+        SUM(amount) AS total_amount
+        FROM `finance_record`
+        WHERE user_id = #{userId}
+        AND type = 2 <!-- 支出 -->
+        AND record_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY category_id
+        ORDER BY total_amount DESC
+    </select>
+
+    <!-- 统计指定时间段内，按收入类别汇总 -->
+    <select id="getIncomeCategorySummaryByUserId" resultType="java.util.Map">
+        SELECT
+        category_id,
+        SUM(amount) AS total_amount
+        FROM `finance_record`
+        WHERE user_id = #{userId}
+        AND type = 1 <!-- 收入 -->
+        AND record_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY category_id
+        ORDER BY total_amount DESC
+    </select>
+
+    <!-- 获取某用户最新的记录ID -->
+    <select id="selectMaxIdByUserId" resultType="java.lang.Long">
+        SELECT COALESCE(MAX(id), 0)
+        FROM `finance_record`
+        WHERE user_id = #{userId}
+    </select>
+</mapper>

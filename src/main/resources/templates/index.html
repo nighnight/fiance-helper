@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人财务助手 - 首页</title>
+    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+</head>
+<body>
+<div th:replace="common/header :: header"></div>
+
+<div class="container mt-4">
+    <h2 class="mb-4">欢迎回来，<span th:text="${session.loginUser.nickname}"></span>！</h2>
+
+    <!-- 关键财务指标 -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="key-index-card income">
+                <h5>当月总收入</h5>
+                <p id="totalIncomeMonth">¥ 0.00</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="key-index-card expense">
+                <h5>当月总支出</h5>
+                <p id="totalExpenseMonth">¥ 0.00</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="key-index-card">
+                <h5>当月结余</h5>
+                <p id="monthBalance">¥ 0.00</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="key-index-card">
+                <h5>总资产</h5>
+                <p id="totalAsset">¥ 0.00</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="key-index-card">
+                <h5>净资产</h5>
+                <p id="netAsset">¥ 0.00</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 快速链接 -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">记录收支</h5>
+                    <p class="card-text">快速记录每一笔收入与支出。</p>
+                    <a th:href="@{/record/add}" class="btn btn-primary">去记一笔</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">查看明细</h5>
+                    <p class="card-text">查看所有收支记录，一目了然。</p>
+                    <a th:href="@{/record/list}" class="btn btn-secondary">查看明细</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">财务分析</h5>
+                    <p class="card-text">通过图表分析消费习惯，优化财务管理。</p>
+                    <a th:href="@{/chart/analysis}" class="btn btn-success">前往分析</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer"></div>
+
+<script th:src="@{/static/lib/jquery.min.js}"></script>
+<script th:src="@{/static/lib/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/common.js}"></script>
+<script th:src="@{/static/js/chart.js}"></script> <!-- 首页也需要chart.js来加载关键指标 -->
+<script>
+    $(function() {
+        // 首页只需要加载关键指标
+        loadKeyFinancialIndex($('#keyIndexDate').val() || formatDate(new Date()));
+    });
+</script>
+</body>
+</html>

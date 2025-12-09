@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.mapper.FinanceCategoryMapper">
+
+    <resultMap id="BaseResultMap" type="com.finance.po.FinanceCategory">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="category_name" jdbcType="VARCHAR" property="categoryName"/>
+        <result column="type" jdbcType="TINYINT" property="type"/>
+        <result column="sort" jdbcType="INTEGER" property="sort"/>
+        <result column="is_default" jdbcType="TINYINT" property="isDefault"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, category_name, type, sort, is_default, create_time, update_time
+    </sql>
+
+    <insert id="insert" parameterType="com.finance.po.FinanceCategory" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `finance_category` (user_id, category_name, type, sort, is_default, create_time, update_time)
+        VALUES (#{userId}, #{categoryName}, #{type}, #{sort}, #{isDefault}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `finance_category`
+        WHERE id = #{id}
+    </select>
+
+    <!-- 查询用户自定义类别和系统默认类别 -->
+    <select id="selectByUserIdAndType" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `finance_category`
+        WHERE user_id = #{userId}
+        <if test="type != null">
+            AND type = #{type}
+        </if>
+        ORDER BY sort ASC, category_name ASC
+    </select>
+
+    <!-- 查询所有默认类别 -->
+    <select id="selectDefaultCategoriesByType" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `finance_category`
+        WHERE user_id = 0
+        <if test="type != null">
+            AND type = #{type}
+        </if>
+        ORDER BY sort ASC, category_name ASC
+    </select>
+
+    <!-- 检查用户是否已存在同名同类型类别 (用户自定义类别) -->
+    <select id="selectByUserIdCategoryNameAndType" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `finance_category`
+        WHERE user_id = #{userId}
+        AND category_name = #{categoryName}
+        AND type = #{type}
+    </select>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.finance.po.FinanceCategory">
+        UPDATE `finance_category`
+        <set>
+            <if test="categoryName != null">
+                category_name = #{categoryName},
+            </if>
+            <if test="type != null">
+                type = #{type},
+            </if>
+            <if test="sort != null">
+                sort = #{sort},
+            </if>
+            <if test="isDefault != null">
+                is_default = #{isDefault},
+            </if>
+            update_time = #{updateTime}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <!-- 用户不能删除系统默认类别，所以需要判断user_id不为0 -->
+    <delete id="deleteByPrimaryKey">
+        DELETE FROM `finance_category`
+        WHERE id = #{id} AND user_id = #{userId} AND is_default = 0
+    </delete>
+
+    <select id="selectCategoryNameById" parameterType="java.lang.Long" resultType="java.lang.String">
+        SELECT category_name FROM `finance_category` WHERE id = #{id}
+    </select>
+</mapper>

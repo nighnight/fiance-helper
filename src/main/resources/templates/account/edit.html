@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑账户</title>
+    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+</head>
+<body>
+<div th:replace="common/header :: header"></div>
+
+<div class="container mt-4">
+    <h2 class="mb-4">编辑账户</h2>
+
+    <div class="form-card">
+        <form id="editAccountForm" th:object="${accountDTO}">
+            <input type="hidden" id="accountId" th:value="${accountId}">
+            <div class="form-group">
+                <label for="accountName">账户名称</label>
+                <input type="text" class="form-control" id="accountName" th:field="*{accountName}" required>
+            </div>
+            <div class="form-group">
+                <label for="accountType">账户类型</label>
+                <select class="form-control" id="accountType" th:field="*{accountType}" required>
+                    <option value="">请选择账户类型</option>
+                    <option value="银行卡">银行卡</option>
+                    <option value="支付宝">支付宝</option>
+                    <option value="微信支付">微信支付</option>
+                    <option value="现金">现金</option>
+                    <option value="信用卡">信用卡</option>
+                    <option value="投资账户">投资账户</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="initialBalance">当前余额</label>
+                <input type="number" step="0.01" class="form-control" id="initialBalance" th:field="*{initialBalance}" readonly>
+                <small class="form-text text-muted">当前余额根据收支记录自动更新，不可直接修改。</small>
+            </div>
+            <div class="form-group">
+                <label for="remark">备注 (可选)</label>
+                <textarea class="form-control" id="remark" th:field="*{remark}" rows="3"></textarea>
+            </div>
+            <div class="form-group text-center mt-4">
+                <button type="submit" class="btn btn-primary">保存修改</button>
+                <a th:href="@{/account/list}" class="btn btn-secondary ml-3">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer"></div>
+
+<script th:src="@{/static/lib/jquery.min.js}"></script>
+<script th:src="@{/static/lib/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/common.js}"></script>
+<script>
+    $(function() {
+        var accountId = $('#accountId').val();
+        $('#editAccountForm').submit(function(e) {
+            e.preventDefault();
+            let accountData = {
+                id: accountId,
+                accountName: $('#accountName').val(),
+                accountType: $('#accountType').val(),
+                // initialBalance 字段在edit时不应直接通过表单修改，后端接收DTO时会忽略
+                remark: $('#remark').val()
+            };
+
+            sendAjaxRequest('/account/api/update/' + accountId, 'POST', accountData, function() {
+                showMessage('账户更新成功！', 'success');
+                window.location.href = '/account/list'; // 更新成功后跳转回列表
+            });
+        });
+    });
+</script>
+</body>
+</html>

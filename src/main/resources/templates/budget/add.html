@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增预算</title>
+    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+</head>
+<body>
+<div th:replace="common/header :: header"></div>
+
+<div class="container mt-4">
+    <h2 class="mb-4">新增预算</h2>
+
+    <div class="form-card">
+        <form id="addBudgetForm" th:object="${budgetDTO}">
+            <div class="form-group">
+                <label for="categoryId">预算类别</label>
+                <select class="form-control" id="categoryId" th:field="*{categoryId}" required>
+                    <option value="0">总预算</option>
+                    <option th:each="category : ${expenseCategories}"
+                            th:value="${category.id}"
+                            th:text="${category.categoryName}">餐饮</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="cycleType">预算周期</label>
+                <select class="form-control" id="cycleType" th:field="*{cycleType}" required>
+                    <option value="1" selected>月度</option>
+                    <!-- <option value="2">季度</option> -->
+                    <!-- <option value="3">年度</option> -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="cycleValue">周期值</label>
+                <input type="month" class="form-control" id="cycleValue" th:field="*{cycleValue}" th:value="${currentMonth}" required>
+                <small class="form-text text-muted">例如：2024-03 表示2024年3月。</small>
+            </div>
+            <div class="form-group">
+                <label for="budgetAmount">预算金额</label>
+                <input type="number" step="0.01" class="form-control" id="budgetAmount" th:field="*{budgetAmount}" placeholder="请输入预算金额" required>
+            </div>
+            <div class="form-group text-center mt-4">
+                <button type="submit" class="btn btn-primary">添加预算</button>
+                <a th:href="@{/budget/list}" class="btn btn-secondary ml-3">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer"></div>
+
+<script th:src="@{/static/lib/jquery.min.js}"></script>
+<script th:src="@{/static/lib/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/common.js}"></script>
+<script>
+    $(function() {
+        $('#addBudgetForm').submit(function(e) {
+            e.preventDefault();
+            let budgetData = {
+                categoryId: parseInt($('#categoryId').val()),
+                cycleType: parseInt($('#cycleType').val()),
+                cycleValue: $('#cycleValue').val(),
+                budgetAmount: parseFloat($('#budgetAmount').val())
+            };
+
+            sendAjaxRequest('/budget/api/add', 'POST', budgetData, function() {
+                showMessage('预算添加成功！', 'success');
+                window.location.href = '/budget/list'; // 添加成功后跳转回列表
+            });
+        });
+    });
+</script>
+</body>
+</html>

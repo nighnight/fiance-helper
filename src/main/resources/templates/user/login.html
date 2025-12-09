@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户登录</title>
+    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #f7f9fc;
+        }
+        .login-container {
+            max-width: 400px;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .login-container h2 {
+            margin-bottom: 30px;
+            text-align: center;
+            color: #333;
+        }
+        .form-group label {
+            font-weight: 500;
+        }
+        .btn-block {
+            padding: 10px 15px;
+            font-size: 1.1em;
+        }
+        .text-center a {
+            color: #007bff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <h2 class="text-center">个人财务助手登录</h2>
+    <form id="loginForm">
+        <div class="form-group">
+            <label for="username">用户名</label>
+            <input type="text" class="form-control" id="username" name="username" placeholder="请输入用户名" required>
+        </div>
+        <div class="form-group">
+            <label for="password">密码</label>
+            <input type="password" class="form-control" id="password" name="password" placeholder="请输入密码" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block mt-4">登录</button>
+    </form>
+    <p class="text-center mt-3">
+        还没有账号？ <a th:href="@{/user/register}">立即注册</a>
+    </p>
+</div>
+
+<script th:src="@{/static/lib/jquery.min.js}"></script>
+<script th:src="@{/static/lib/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/common.js}"></script>
+<script>
+    $(function() {
+        $('#loginForm').submit(function(e) {
+            e.preventDefault();
+            let username = $('#username').val();
+            let password = $('#password').val();
+
+            sendAjaxRequest('/user/api/login', 'POST', { username: username, password: password }, function(data) {
+                showMessage('登录成功，欢迎回来！', 'success');
+                window.location.href = '/'; // 登录成功后跳转到首页
+            });
+        });
+    });
+</script>
+</body>
+</html>

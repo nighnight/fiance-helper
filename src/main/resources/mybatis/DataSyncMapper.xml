@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.finance.mapper.DataSyncMapper">
+
+    <resultMap id="BaseResultMap" type="com.finance.po.DataSync">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="user_id" jdbcType="BIGINT" property="userId"/>
+        <result column="sync_type" jdbcType="VARCHAR" property="syncType"/>
+        <result column="max_sync_id" jdbcType="BIGINT" property="maxSyncId"/>
+        <result column="last_sync_time" jdbcType="TIMESTAMP" property="lastSyncTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, user_id, sync_type, max_sync_id, last_sync_time
+    </sql>
+
+    <insert id="insert" parameterType="com.finance.po.DataSync" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `data_sync` (user_id, sync_type, max_sync_id, last_sync_time)
+        VALUES (#{userId}, #{syncType}, #{maxSyncId}, #{lastSyncTime})
+    </insert>
+
+    <select id="selectByUserIdAndSyncType" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM `data_sync`
+        WHERE user_id = #{userId} AND sync_type = #{syncType}
+    </select>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.finance.po.DataSync">
+        UPDATE `data_sync`
+        <set>
+            <if test="maxSyncId != null">
+                max_sync_id = #{maxSyncId},
+            </if>
+            <if test="lastSyncTime != null">
+                last_sync_time = #{lastSyncTime},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateMaxSyncId">
+        UPDATE `data_sync`
+        SET max_sync_id = #{maxSyncId},
+            last_sync_time = NOW()
+        WHERE user_id = #{userId} AND sync_type = #{syncType}
+    </update>
+</mapper>

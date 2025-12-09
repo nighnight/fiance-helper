@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新增收支记录</title>
+    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
+    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+</head>
+<body>
+<div th:replace="common/header :: header"></div>
+
+<div class="container mt-4">
+    <h2 class="mb-4">新增收支记录</h2>
+
+    <div class="form-card">
+        <form id="addRecordForm" th:object="${recordDTO}">
+            <div class="form-group">
+                <label>类型</label>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" id="typeIncome" name="type" value="1" th:field="*{type}" checked>
+                        <label class="form-check-label" for="typeIncome">收入</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" id="typeExpense" name="type" value="2" th:field="*{type}">
+                        <label class="form-check-label" for="typeExpense">支出</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mt-3">
+                <label for="amount">金额</label>
+                <input type="number" step="0.01" class="form-control" id="amount" th:field="*{amount}" placeholder="请输入金额" required>
+            </div>
+
+            <div class="form-group" id="incomeCategoryGroup" style="display: none;">
+                <label for="incomeCategoryId">收入类别</label>
+                <select class="form-control" id="incomeCategoryId" th:field="*{categoryId}" required>
+                    <!-- 由JS动态加载 -->
+                    <option value="">请选择类别</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="expenseCategoryGroup" style="display: none;">
+                <label for="expenseCategoryId">支出类别</label>
+                <select class="form-control" id="expenseCategoryId" th:field="*{categoryId}" required>
+                    <!-- 由JS动态加载 -->
+                    <option value="">请选择类别</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="accountId">账户</label>
+                <select class="form-control" id="accountId" th:field="*{accountId}" required>
+                    <!-- 由JS动态加载 -->
+                    <option value="">请选择账户</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="recordDate">日期</label>
+                <input type="date" class="form-control" id="recordDate" th:field="*{recordDate}" required>
+            </div>
+
+            <div class="form-group">
+                <label for="remark">备注 (可选)</label>
+                <textarea class="form-control" id="remark" th:field="*{remark}" rows="3"></textarea>
+            </div>
+
+            <!-- 凭证图片上传（可选，目前只用于详情页编辑） -->
+            <!-- <div class="form-group">
+                <label for="voucherFile">凭证图片 (可选)</label>
+                <div class="input-group">
+                    <div class="custom-file">
+                        <input type="file" class="custom-file-input" id="voucherFile" accept="image/*">
+                        <label class="custom-file-label" for="voucherFile">选择文件</label>
+                    </div>
+                </div>
+                <img id="voucherImage" src="" alt="凭证图片" style="max-width: 100%; max-height: 200px; margin-top: 10px; display: none;">
+            </div> -->
+
+            <div class="form-group text-center mt-4">
+                <button type="submit" class="btn btn-primary">保存记录</button>
+                <a th:href="@{/record/list}" class="btn btn-secondary ml-3">取消</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div th:replace="common/footer :: footer"></div>
+
+<script th:src="@{/static/lib/jquery.min.js}"></script>
+<script th:src="@{/static/lib/bootstrap.min.js}"></script>
+<script th:src="@{/static/js/common.js}"></script>
+<script th:src="@{/static/js/record.js}"></script>
+</body>
+</html>

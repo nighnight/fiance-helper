@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: finance-helper
+  profiles:
+    active: dev # 激活开发环境配置
+  thymeleaf:
+    cache: false # 开发时禁用缓存，方便调试
+    encoding: UTF-8
+    mode: HTML # 官方推荐HTML5
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/finance_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+    username: root # 您的MySQL用户名
+    password: "@2370547251" # 您的MySQL密码
+  # Spring Boot 3.x 移除了旧版的multipart配置，现在默认使用ServletBasedMultipart
+  servlet:
+    multipart:
+      max-file-size: 5MB # 单个文件最大5MB
+      max-request-size: 10MB # 单次请求文件总大小最大10MB
+
+mybatis:
+  mapper-locations: classpath:mybatis/*.xml # Mapper XML文件位置
+  configuration:
+    map-underscore-to-camel-case: true # 开启驼峰命名自动映射
+
+server:
+  port: 8080 # 应用端口
+  servlet:
+    session:
+      timeout: 30m # Session 超时时间 30 分钟
+
+file:
+  upload-dir: D:/finance_helper_uploads/ # 根据您的操作系统修改，例如 /var/finance_helper_uploads/
+  # 注意：Windows路径使用 / 或 \\，Linux使用 /

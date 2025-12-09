@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version> <!-- 修正：Spring Boot 4.0.0 不存在，使用当前稳定版 3.2.0 -->
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.finance</groupId>
+    <artifactId>finance-helper</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>finance-helper</name>
+    <description>finance-helper（个人财务管理系统）</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <mybatis.starter.version>3.0.3</mybatis.starter.version> <!-- 明确MyBatis Spring Boot Starter版本 -->
+        <lombok.version>1.18.32</lombok.version>
+        <mysql.connector.version>8.3.0</mysql.connector.version>
+        <jjwt.version>0.11.5</jjwt.version>
+        <poi.version>5.2.3</poi.version> <!-- Apache POI 版本 -->
+    </properties>
+
+    <dependencies>
+        <!-- 1. Spring Boot Web Starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!-- 2. Thymeleaf前端模板 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <!-- Thymeleaf Layout Dialect (可选，用于布局模板) -->
+        <dependency>
+            <groupId>nz.net.ultraq.thymeleaf</groupId>
+            <artifactId>thymeleaf-layout-dialect</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+
+        <!-- 3. MyBatis Spring Boot Starter (已包含mybatis和mybatis-spring) -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+            <version>${mybatis.starter.version}</version>
+            <!-- 移除了手动排除和重新引入，Starter会处理这些 -->
+        </dependency>
+
+        <!-- 4. MySQL 连接器 -->
+        <dependency>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
+            <version>${mysql.connector.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 5. 密码加密 (Spring Security Crypto) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+            <!-- Spring Boot Starter Parent会管理其版本 -->
+        </dependency>
+
+        <!-- 6. 参数校验 (Jakarta Validation API + Hibernate Validator) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <!-- 此Starter会自动引入 jakarta.validation-api 和 hibernate-validator -->
+        </dependency>
+
+        <!-- 7. 文件操作工具 -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.15.1</version>
+        </dependency>
+
+        <!-- 8. JSON处理 (Spring Boot 默认使用 Jackson) -->
+        <!-- 如果需要 Fastjson，建议只保留 Fastjson，并手动配置HttpMessageConverter -->
+        <!-- 此处移除 fastjson，使用 Spring Boot 默认的 Jackson -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <!-- 版本由 Spring Boot Starter Parent 管理 -->
+        </dependency>
+
+        <!-- 9. Lombok (简化POJO代码) -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- 10. Apache POI 用于 Excel 导出 -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+        <!-- Apache Commons Lang3 (常用工具类) -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.12.0</version>
+        </dependency>
+
+        <!-- 11. JWT 支持 -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>${jjwt.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>${jjwt.version}</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- 12. 测试依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 13. 热部署依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+            <scope>runtime</scope> <!-- 通常只在运行时需要 -->
+        </dependency>
+
+        <!-- 移除了 javax.annotation-api，因为 Spring Boot 3+ 使用 Jakarta 命名空间 -->
+        <!-- 如果仍有相关问题，可能需要检查其他地方是否错误引入了旧版Javax依赖 -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+        </plugins>
+
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.*</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+
+</project>
