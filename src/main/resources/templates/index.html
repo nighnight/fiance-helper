@@ -7,15 +7,54 @@
     <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
     <!-- 引入 Bootstrap Icons -->
     <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- ▼▼▼▼▼ 新增的美化样式 ▼▼▼▼▼ -->
     <style>
-        body { background-color: #f8f9fa; }
-        .stat-card { transition: all 0.3s; border: none; border-radius: 12px; }
+        body {
+            background-image: url('/img/20170512211852_MsLmy.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .card {
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            background-color: rgba(255, 255, 255, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        /* ▼▼▼▼▼ 关键修改在这里 ▼▼▼▼▼ */
+        .navbar {
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            background-color: rgba(13, 110, 253, 0.7) !important;
+            position: sticky; /* 让 z-index 生效 */
+            top: 0;
+            z-index: 1030; /* 确保导航栏在最上层 */
+        }
+
+        .dropdown-menu {
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.7) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            z-index: 1040; /* 确保下拉菜单比导航栏还高 */
+        }
+        /* ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ */
+
+        .text-secondary { color: #444 !important; font-weight: 500; }
+        .card-header, .card-title, h5, .list-group-item { color: #333; }
+        .module-card { cursor: pointer; height: 100%;}
+        .module-card:hover { border-color: #0d6efd; background-color: rgba(255, 255, 255, 0.6); transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .icon-box { font-size: 1.8rem; margin-right: 15px; }
         .stat-card:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .module-card { cursor: pointer; height: 100%; transition: all 0.2s; }
-        .module-card:hover { border-color: #0d6efd; background-color: #f8faff; }
-        .icon-box { font-size: 2rem; margin-bottom: 10px; }
-        .disabled-module { opacity: 0.6; cursor: not-allowed; }
     </style>
+    <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
+
+
+    <link rel="icon" type="image/png" th:href="@{/ficon.png}">
 </head>
 <body>
 
@@ -31,18 +70,24 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
                 <li class="nav-item"><a class="nav-link active" href="/">仪表盘</a></li>
+                <li class="nav-item"><a class="nav-link" href="/record/index">收支明细</a></li>
                 <li class="nav-item"><a class="nav-link" href="/account/index">账户管理</a></li>
-                <!-- 预留导航 -->
-                <li class="nav-item"><a class="nav-link disabled" href="#">收支记录</a></li>
-                <li class="nav-item"><a class="nav-link disabled" href="#">统计报表</a></li>
+                <li class="nav-item"><a class="nav-link" href="/category/index">分类管理</a></li>
+                <li class="nav-item"><a class="nav-link" href="/chart/index">统计报表</a></li>
+                <li class="nav-item"><a class="nav-link" href="/budget/index">预算管理</a></li>
             </ul>
             <div class="d-flex align-items-center text-white">
                 <div class="dropdown">
-                    <a class="text-white text-decoration-none dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-person-circle"></i> <span th:text="${user.nickname}">用户</span>
+                    <a class="text-white text-decoration-none dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown">
+                        <img th:if="${user.avatar != null && user.avatar != ''}"
+                             th:src="${user.avatar}"
+                             class="rounded-circle me-2"
+                             style="width: 32px; height: 32px; object-fit: cover; border: 1px solid rgba(255,255,255,0.5);">
+                        <i th:if="${user.avatar == null || user.avatar == ''}" class="bi bi-person-circle me-2" style="font-size: 1.5rem;"></i>
+                        <span th:text="${user.nickname}">用户</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> 个人设置</a></li>
+                        <li><a class="dropdown-item" href="/user/profile"><i class="bi bi-gear"></i> 个人中心</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item text-danger" href="/user/logout"><i class="bi bi-box-arrow-right"></i> 退出登录</a></li>
                     </ul>
@@ -55,119 +100,108 @@
 <!-- 2. 主内容区域 -->
 <div class="container mt-4">
 
-    <!-- 第一行：数据概览卡片 -->
+    <!-- 第一行：数据概览卡片 (真实数据) -->
     <div class="row g-4 mb-4">
-        <!-- 总资产 (动态计算) -->
+        <!-- 总资产 -->
         <div class="col-md-4">
-            <div class="card stat-card bg-primary text-white h-100">
-                <div class="card-body">
+            <div class="card stat-card h-100" style="background-color: rgba(13, 110, 253, 0.6);">
+                <div class="card-body text-white">
                     <h6 class="card-title opacity-75">总资产</h6>
-                    <h2 class="fw-bold my-2" id="totalAssets">¥ 0.00</h2>
-                    <small class="opacity-75"><i class="bi bi-graph-up-arrow"></i> 实时统计</small>
+                    <h2 class="fw-bold my-2" th:text="'¥ ' + ${totalAssets}">¥ 0.00</h2>
+                    <small class="opacity-75"><i class="bi bi-wallet2"></i> 实时余额统计</small>
                 </div>
             </div>
         </div>
-        <!-- 本月收入 (预留) -->
+        <!-- 本月收入 -->
         <div class="col-md-4">
-            <div class="card stat-card bg-success text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title opacity-75">本月收入 (预留)</h6>
-                    <h2 class="fw-bold my-2">¥ 0.00</h2>
-                    <small class="opacity-75">待开发收支模块</small>
+            <div class="card stat-card h-100" style="background-color: rgba(25, 135, 84, 0.7);">
+                <div class="card-body text-white">
+                    <h6 class="card-title opacity-75">本月收入</h6>
+                    <h2 class="fw-bold my-2" th:text="'¥ ' + ${monthIncome}">¥ 0.00</h2>
+                    <small class="opacity-75"><i class="bi bi-graph-up-arrow"></i> 本月入账</small>
                 </div>
             </div>
         </div>
-        <!-- 本月支出 (预留) -->
+        <!-- 本月支出 -->
         <div class="col-md-4">
-            <div class="card stat-card bg-danger text-white h-100">
-                <div class="card-body">
-                    <h6 class="card-title opacity-75">本月支出 (预留)</h6>
-                    <h2 class="fw-bold my-2">¥ 0.00</h2>
-                    <small class="opacity-75">待开发收支模块</small>
+            <div class="card stat-card h-100" style="background-color: rgba(220, 53, 69, 0.7);">
+                <div class="card-body text-white">
+                    <h6 class="card-title opacity-75">本月支出</h6>
+                    <h2 class="fw-bold my-2" th:text="'¥ ' + ${monthExpense}">¥ 0.00</h2>
+                    <small class="opacity-75"><i class="bi bi-cart3"></i> 本月花销</small>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="row">
-        <!-- 左侧：功能入口 -->
+        <!-- 左侧：功能入口 (6个卡片) -->
         <div class="col-lg-8">
             <h5 class="mb-3 text-secondary">常用功能</h5>
             <div class="row g-3">
 
-                <!-- 模块 1: 账户管理 (已完成) -->
                 <div class="col-md-6">
-                    <div class="card module-card shadow-sm p-3" onclick="location.href='/account/index'">
+                    <div class="card module-card p-3" onclick="location.href='/record/toAdd'">
                         <div class="d-flex align-items-center">
-                            <div class="icon-box text-primary me-3">
-                                <i class="bi bi-credit-card-2-front"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-1">账户管理</h5>
-                                <p class="text-muted small mb-0">管理银行卡、支付宝、微信等资金账户</p>
-                            </div>
+                            <div class="icon-box text-success"><i class="bi bi-pencil-square"></i></div>
+                            <div><h5 class="mb-1 fw-bold">记一笔</h5><p class="text-muted small mb-0">快速记录收支</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card module-card p-3" onclick="location.href='/record/index'">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box text-primary"><i class="bi bi-list-ul"></i></div>
+                            <div><h5 class="mb-1 fw-bold">收支明细</h5><p class="text-muted small mb-0">查看历史账单</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card module-card p-3" onclick="location.href='/account/index'">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box text-info"><i class="bi bi-credit-card-2-front"></i></div>
+                            <div><h5 class="mb-1 fw-bold">账户管理</h5><p class="text-muted small mb-0">管理资金账户</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card module-card p-3" onclick="location.href='/category/index'">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box" style="color: #6c757d;"><i class="bi bi-grid"></i></div>
+                            <div><h5 class="mb-1 fw-bold">分类管理</h5><p class="text-muted small mb-0">自定义收支类别</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card module-card p-3" onclick="location.href='/chart/index'">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box text-warning"><i class="bi bi-pie-chart"></i></div>
+                            <div><h5 class="mb-1 fw-bold">统计分析</h5><p class="text-muted small mb-0">收支趋势与占比</p></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card module-card p-3" onclick="location.href='/budget/index'">
+                        <div class="d-flex align-items-center">
+                            <div class="icon-box text-danger"><i class="bi bi-speedometer2"></i></div>
+                            <div><h5 class="mb-1 fw-bold">预算管理</h5><p class="text-muted small mb-0">监控消费进度</p></div>
                         </div>
                     </div>
                 </div>
 
-                <!-- 模块 2: 记一笔 (待开发) -->
-                <div class="col-md-6">
-                    <div class="card module-card shadow-sm p-3 disabled-module" onclick="alert('该功能将在【收支记录】模块中开发')">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-box text-success me-3">
-                                <i class="bi bi-pencil-square"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-1">记一笔 (开发中)</h5>
-                                <p class="text-muted small mb-0">快速记录日常收入与支出</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 模块 3: 统计报表 (待开发) -->
-                <div class="col-md-6">
-                    <div class="card module-card shadow-sm p-3 disabled-module" onclick="alert('该功能将在【图表分析】模块中开发')">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-box text-warning me-3">
-                                <i class="bi bi-pie-chart"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-1">统计分析 (开发中)</h5>
-                                <p class="text-muted small mb-0">查看收支趋势图与分类占比</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 模块 4: 预算设置 (待开发) -->
-                <div class="col-md-6">
-                    <div class="card module-card shadow-sm p-3 disabled-module" onclick="alert('该功能将在【预算管理】模块中开发')">
-                        <div class="d-flex align-items-center">
-                            <div class="icon-box text-info me-3">
-                                <i class="bi bi-speedometer2"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-1">预算管理 (开发中)</h5>
-                                <p class="text-muted small mb-0">设置月度预算，防止超支</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
         <!-- 右侧：我的账户预览 -->
         <div class="col-lg-4 mt-4 mt-lg-0">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">我的账户</h6>
+            <div class="card h-100">
+                <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">我的账户</h6>
                     <a href="/account/index" class="text-decoration-none small">全部 ></a>
                 </div>
                 <div class="card-body p-0">
                     <ul class="list-group list-group-flush" id="accountPreviewList">
-                        <!-- 动态加载账户列表 -->
-                        <li class="list-group-item text-center py-4 text-muted">加载中...</li>
+                        <li class="list-group-item text-center py-4 text-muted bg-transparent">加载中...</li>
                     </ul>
                 </div>
             </div>
@@ -175,44 +209,33 @@
     </div>
 </div>
 
-<!-- 引入 Bootstrap JS 和 jQuery -->
-<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
 
 <script>
     $(document).ready(function() {
-        // 页面加载完成后，调用后端接口获取数据
-        fetchDashboardData();
+        // 右侧账户列表使用 Ajax 加载，保持页面响应速度
+        fetchAccountData();
     });
 
-    function fetchDashboardData() {
-        // 利用已有的 /account/list 接口来计算总资产和展示预览
+    function fetchAccountData() {
         $.ajax({
             url: '/account/list',
             type: 'GET',
             success: function(res) {
                 if (res.code === 200) {
                     renderAccountData(res.data);
-                } else {
-                    console.error("加载数据失败: " + res.msg);
                 }
             }
         });
     }
 
     function renderAccountData(accounts) {
-        let total = 0;
         let html = '';
-
         if (!accounts || accounts.length === 0) {
-            html = '<li class="list-group-item text-center py-4 text-muted">暂无账户</li>';
+            html = '<li class="list-group-item text-center py-4 text-muted bg-transparent">暂无账户</li>';
         } else {
-            // 1. 计算总资产
-            accounts.forEach(acc => {
-                total += parseFloat(acc.currentBalance);
-            });
-
-            // 2. 生成右侧预览列表 (只显示前 5 个)
+            // 只显示前 5 个
             $.each(accounts.slice(0, 5), function(index, item) {
                 let icon = 'bi-credit-card';
                 if(item.accountType === '微信') icon = 'bi-chat-dots text-success';
@@ -220,7 +243,7 @@
                 if(item.accountType === '现金') icon = 'bi-cash-coin text-warning';
 
                 html += `
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
                         <div>
                             <i class="bi ${icon} me-2"></i>
                             <span>${item.accountName}</span>
@@ -230,9 +253,6 @@
                 `;
             });
         }
-
-        // 更新页面 DOM
-        $('#totalAssets').text('¥ ' + total.toFixed(2));
         $('#accountPreviewList').html(html);
     }
 </script>

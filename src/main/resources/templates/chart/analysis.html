@@ -1,107 +1,200 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>财务分析</title>
-    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <title>统计分析</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body>
-<div th:replace="common/header :: header"></div>
+<body class="bg-light">
 
-<div class="container mt-4">
-    <h2 class="mb-4">财务分析</h2>
-
-    <!-- 关键财务指标 (直接复用首页的KeyIndexVO) -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">当前财务概览</h5>
-            <div class="form-row align-items-end mb-3">
-                <div class="form-group col-md-3">
-                    <label for="keyIndexDate">查询日期 (当月)</label>
-                    <input type="date" class="form-control" id="keyIndexDate" th:value="${currentMonth + '-01'}">
-                </div>
-                <div class="form-group col-md-auto">
-                    <button type="button" class="btn btn-info" id="loadKeyIndexButton">查询概览</button>
-                </div>
-            </div>
-            <div class="row text-center">
-                <div class="col-md-3 mb-2">
-                    <div class="key-index-card income p-2">
-                        <h6>当月总收入</h6>
-                        <p id="totalIncomeMonth" class="m-0">¥ 0.00</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-2">
-                    <div class="key-index-card expense p-2">
-                        <h6>当月总支出</h6>
-                        <p id="totalExpenseMonth" class="m-0">¥ 0.00</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-2">
-                    <div class="key-index-card p-2">
-                        <h6>当月结余</h6>
-                        <p id="monthBalance" class="m-0">¥ 0.00</p>
-                    </div>
-                </div>
-                <div class="col-md-3 mb-2">
-                    <div class="key-index-card p-2">
-                        <h6>总资产</h6>
-                        <p id="totalAsset" class="m-0">¥ 0.00</p>
-                    </div>
-                </div>
-                <!-- 净资产可以根据实际情况显示 -->
-                <!-- <div class="col-md-2">
-                    <div class="key-index-card p-2">
-                        <h6>净资产</h6>
-                        <p id="netAsset" class="m-0">¥ 0.00</p>
-                    </div>
-                </div> -->
-            </div>
-        </div>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">财务助手</a>
+        <span class="navbar-text text-white">统计分析</span>
     </div>
+</nav>
 
-    <!-- 图表筛选区域 -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">图表数据筛选</h5>
-            <div class="form-row">
-                <div class="form-group col-md-4">
-                    <label for="chartDateRangeStart">开始日期</label>
-                    <input type="date" class="form-control" id="chartDateRangeStart" value="2024-01-01">
+<div class="container">
+    <!-- 筛选栏 -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body py-3">
+            <div class="row align-items-center">
+                <div class="col-auto">
+                    <label class="fw-bold">选择月份：</label>
                 </div>
-                <div class="form-group col-md-4">
-                    <label for="chartDateRangeEnd">结束日期</label>
-                    <input type="date" class="form-control" id="chartDateRangeEnd" th:value="${#dates.format(#dates.createNow(), 'yyyy-MM-dd')}">
+                <div class="col-auto">
+                    <input type="month" id="monthPicker" class="form-control">
                 </div>
-                <div class="form-group col-md-4 align-self-end text-right">
-                    <button type="button" class="btn btn-primary" id="loadChartsButton">生成图表</button>
+                <div class="col-auto">
+                    <button class="btn btn-primary" onclick="loadCharts()">查询</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- 图表展示区域 -->
     <div class="row">
-        <div class="col-md-12">
-            <div class="chart-container" id="monthlyTrendChart"></div>
+        <!-- 饼图：消费构成 -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">消费构成 (Top 10)</h5>
+                </div>
+                <div class="card-body">
+                    <div id="pieChart" style="height: 350px;"></div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <div class="chart-container" id="expensePieChart"></div>
+
+        <!-- 折线图：每日收支 -->
+        <div class="col-md-6 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">每日收支趋势</h5>
+                </div>
+                <div class="card-body">
+                    <div id="lineChart" style="height: 350px;"></div>
+                </div>
+            </div>
         </div>
-        <div class="col-md-6">
-            <div class="chart-container" id="incomePieChart"></div>
-        </div>
+    </div>
+
+    <div class="text-center">
+        <a href="/" class="btn btn-link text-decoration-none">返回首页</a>
     </div>
 </div>
 
-<div th:replace="common/footer :: footer"></div>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<!-- 引入 ECharts -->
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
 
-<script th:src="@{/static/lib/jquery.min.js}"></script>
-<script th:src="@{/static/lib/bootstrap.min.js}"></script>
-<script th:src="@{/static/lib/echarts.min.js}"></script>
-<script th:src="@{/static/js/common.js}"></script>
-<script th:src="@{/static/js/chart.js}"></script>
+<script>
+    var pieChartInstance = null;
+    var lineChartInstance = null;
+
+    $(document).ready(function() {
+        // 默认选中当前月份
+        let now = new Date();
+        let monthStr = now.toISOString().slice(0, 7); // yyyy-MM
+        $('#monthPicker').val(monthStr);
+
+        // 初始化图表实例
+        pieChartInstance = echarts.init(document.getElementById('pieChart'));
+        lineChartInstance = echarts.init(document.getElementById('lineChart'));
+
+        loadCharts();
+
+        // 窗口大小改变时重绘
+        window.onresize = function() {
+            pieChartInstance.resize();
+            lineChartInstance.resize();
+        };
+    });
+
+    function loadCharts() {
+        let month = $('#monthPicker').val();
+
+        // 显示 Loading
+        pieChartInstance.showLoading();
+        lineChartInstance.showLoading();
+
+        $.ajax({
+            url: '/chart/data',
+            type: 'GET',
+            data: { month: month },
+            success: function(res) {
+                pieChartInstance.hideLoading();
+                lineChartInstance.hideLoading();
+
+                if (res.code === 200) {
+                    renderPie(res.data.pieData);
+                    renderLine(res.data.lineExpense, res.data.lineIncome);
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
+
+    function renderPie(data) {
+        if(!data || data.length === 0) {
+            // 暂无数据提示
+            pieChartInstance.setOption({
+                title: { text: '本月暂无支出', x: 'center', y: 'center', textStyle: { color: '#999', fontSize: 14 } },
+                series: []
+            }, true);
+            return;
+        }
+
+        let option = {
+            tooltip: { trigger: 'item' },
+            legend: { top: '5%', left: 'center' },
+            series: [
+                {
+                    name: '消费分类',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    avoidLabelOverlap: false,
+                    itemStyle: { borderRadius: 10, borderColor: '#fff', borderWidth: 2 },
+                    label: { show: false, position: 'center' },
+                    emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold' } },
+                    labelLine: { show: false },
+                    data: data
+                }
+            ]
+        };
+        pieChartInstance.setOption(option, true);
+    }
+
+    function renderLine(expenseData, incomeData) {
+        // 构造 X 轴数据 (1号到31号)
+        let days = [];
+        for(let i=1; i<=31; i++) days.push(i + '日');
+
+        // 映射数据到对应的日期，防止数据断层
+        function mapDataToDays(rawData) {
+            let arr = new Array(31).fill(0);
+            if(rawData) {
+                rawData.forEach(item => {
+                    let dayIndex = parseInt(item.name) - 1; // "01" -> index 0
+                    if(dayIndex >= 0 && dayIndex < 31) {
+                        arr[dayIndex] = item.value;
+                    }
+                });
+            }
+            return arr;
+        }
+
+        let yExpense = mapDataToDays(expenseData);
+        let yIncome = mapDataToDays(incomeData);
+
+        let option = {
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['支出', '收入'] },
+            grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+            xAxis: { type: 'category', boundaryGap: false, data: days },
+            yAxis: { type: 'value' },
+            series: [
+                {
+                    name: '支出',
+                    type: 'line',
+                    smooth: true,
+                    data: yExpense,
+                    itemStyle: { color: '#dc3545' },
+                    areaStyle: { opacity: 0.1, color: '#dc3545' }
+                },
+                {
+                    name: '收入',
+                    type: 'line',
+                    smooth: true,
+                    data: yIncome,
+                    itemStyle: { color: '#198754' },
+                    areaStyle: { opacity: 0.1, color: '#198754' }
+                }
+            ]
+        };
+        lineChartInstance.setOption(option, true);
+    }
+</script>
 </body>
 </html>

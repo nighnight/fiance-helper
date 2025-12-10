@@ -1,70 +1,81 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>添加类别</title>
-    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <title>新增分类</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-<div th:replace="common/header :: header"></div>
+<body class="bg-light">
 
-<div class="container mt-4">
-    <h2 class="mb-4">添加新类别</h2>
+<div class="container mt-5">
+    <div class="card mx-auto shadow-sm" style="max-width: 500px;">
+        <div class="card-header bg-white py-3">
+            <h5 class="card-title mb-0">新增分类</h5>
+        </div>
+        <div class="card-body">
+            <form id="addForm">
+                <div class="mb-3">
+                    <label class="form-label">分类名称 <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="categoryName" placeholder="例如：兼职、宠物" required>
+                </div>
 
-    <div class="form-card">
-        <form id="addCategoryForm" th:object="${categoryDTO}">
-            <div class="form-group">
-                <label>类别类型</label>
-                <div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" id="typeIncome" name="type" th:field="*{type}" value="1" checked required>
-                        <label class="form-check-label" for="typeIncome">收入</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" id="typeExpense" name="type" th:field="*{type}" value="2" required>
-                        <label class="form-check-label" for="typeExpense">支出</label>
+                <div class="mb-3">
+                    <label class="form-label">收支类型</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" value="2" checked>
+                            <label class="form-check-label">支出</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="type" value="1">
+                            <label class="form-check-label">收入</label>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="form-group mt-3">
-                <label for="categoryName">类别名称</label>
-                <input type="text" class="form-control" id="categoryName" th:field="*{categoryName}" placeholder="如：餐饮、工资" required>
-            </div>
-            <div class="form-group">
-                <label for="sort">排序 (数字越小越靠前)</label>
-                <input type="number" class="form-control" id="sort" th:field="*{sort}" value="0">
-            </div>
-            <div class="form-group text-center mt-4">
-                <button type="submit" class="btn btn-primary">添加类别</button>
-                <a th:href="@{/category/list}" class="btn btn-secondary ml-3">取消</a>
-            </div>
-        </form>
+
+                <div class="mb-3">
+                    <label class="form-label">排序值</label>
+                    <input type="number" class="form-control" name="sort" value="100">
+                    <div class="form-text">数字越小显示越靠前</div>
+                </div>
+
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="/category/index" class="btn btn-light me-md-2">取消</a>
+                    <button type="button" class="btn btn-primary" onclick="submitAdd()">保存</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
-<div th:replace="common/footer :: footer"></div>
-
-<script th:src="@{/static/lib/jquery.min.js}"></script>
-<script th:src="@{/static/lib/bootstrap.min.js}"></script>
-<script th:src="@{/static/js/common.js}"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script>
-    $(function() {
-        $('#addCategoryForm').submit(function(e) {
-            e.preventDefault();
-            let categoryData = {
-                categoryName: $('#categoryName').val(),
-                type: parseInt($('input[name="type"]:checked').val()),
-                sort: parseInt($('#sort').val())
-            };
+    function submitAdd() {
+        var data = {
+            categoryName: $('input[name="categoryName"]').val(),
+            type: $('input[name="type"]:checked').val(),
+            sort: $('input[name="sort"]').val()
+        };
 
-            sendAjaxRequest('/category/api/add', 'POST', categoryData, function() {
-                showMessage('类别添加成功！', 'success');
-                window.location.href = '/category/list'; // 添加成功后跳转回列表
-            });
+        if(!data.categoryName) {
+            alert("请填写分类名称");
+            return;
+        }
+
+        $.ajax({
+            url: '/category', // POST
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+                if(res.code === 200) {
+                    window.location.href = '/category/index';
+                } else {
+                    alert("操作失败：" + res.msg);
+                }
+            }
         });
-    });
+    }
 </script>
 </body>
 </html>

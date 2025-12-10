@@ -2,15 +2,13 @@ package com.finance.service;
 
 import com.finance.dto.CategoryDTO;
 import com.finance.po.FinanceCategory;
-import com.finance.vo.CategoryVO;
-
+import jakarta.servlet.http.HttpSession;
 import java.util.List;
 
 public interface FinanceCategoryService {
-    void addCategory(Long userId, CategoryDTO categoryDTO);
-    void updateCategory(Long userId, CategoryDTO categoryDTO);
-    void deleteCategory(Long userId, Long categoryId);
-    CategoryVO getCategoryById(Long categoryId);
-    List<CategoryVO> getCategoriesByUserIdAndType(Long userId, Integer type);
-    List<CategoryVO> getAllPossibleCategoriesForUser(Long userId, Integer type); // 用户自定义+系统默认
+    List<FinanceCategory> getList(HttpSession session);
+    void addCategory(CategoryDTO dto, HttpSession session);
+    FinanceCategory getById(Long id);
+    void updateCategory(CategoryDTO dto);
+    void deleteCategory(Long id);
 }

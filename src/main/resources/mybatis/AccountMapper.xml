@@ -2,30 +2,38 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.finance.mapper.AccountMapper">
 
+    <!-- 查询用户所有账户 -->
     <select id="selectByUserId" resultType="com.finance.po.Account">
         SELECT * FROM account WHERE user_id = #{userId} ORDER BY create_time DESC
     </select>
 
-    <insert id="insert">
-        INSERT INTO account (user_id, account_name, account_type, initial_balance, current_balance, remark, create_time, update_time)
-        VALUES (#{userId}, #{accountName}, #{accountType}, #{initialBalance}, #{currentBalance}, #{remark}, NOW(), NOW())
-    </insert>
-
+    <!-- 根据ID查询账户 -->
     <select id="selectById" resultType="com.finance.po.Account">
         SELECT * FROM account WHERE id = #{id}
     </select>
 
+    <!-- 插入新账户 -->
+    <insert id="insert">
+        INSERT INTO account (user_id, account_name, account_type, initial_balance, current_balance, remark, create_time, update_time, is_enabled)
+        VALUES (#{userId}, #{accountName}, #{accountType}, #{initialBalance}, #{currentBalance}, #{remark}, NOW(), NOW(), 1)
+    </insert>
+
+    <!-- 更新账户 (修复了余额不更新的问题) -->
     <update id="update">
         UPDATE account
         <set>
             <if test="accountName != null">account_name = #{accountName},</if>
             <if test="accountType != null">account_type = #{accountType},</if>
+            <!-- ▼▼▼ 关键修改：加上这行，余额才会变 ▼▼▼ -->
+            <if test="currentBalance != null">current_balance = #{currentBalance},</if>
+            <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
             <if test="remark != null">remark = #{remark},</if>
             update_time = NOW()
         </set>
         WHERE id = #{id}
     </update>
 
+    <!-- 删除账户 -->
     <delete id="deleteById">
         DELETE FROM account WHERE id = #{id}
     </delete>

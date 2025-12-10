@@ -7,4 +7,9 @@ import jakarta.servlet.http.HttpSession;
 public interface SysUserService {
     Result login(String username, String password, HttpSession session);
     Result register(SysUser sysUser);
+
+    void updateInfo(SysUser user, HttpSession session);
+    void updatePassword(Long userId, String oldPwd, String newPwd);
+
+
 }

@@ -12,4 +12,22 @@
         VALUES (#{username}, #{password}, #{nickname}, NOW(), 1)
     </insert>
 
+
+    <!-- 在末尾添加 -->
+    <update id="update">
+        UPDATE sys_user
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="password != null">password = #{password},</if>
+            update_time = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectById" resultType="com.finance.po.SysUser">
+        SELECT * FROM sys_user WHERE id = #{id}
+    </select>
 </mapper>
