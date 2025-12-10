@@ -1,0 +1,7 @@
+finance:
+  aliyun:
+    oss:
+      endpoint: oss-cn-hangzhou.aliyuncs.com  # 你的Bucket所在地域节点
+      access-key-id: LTAI5tBy5WYEt4YExWUvCy8G      # 你的AccessKey ID
+      access-key-secret: hBUUnUyDRwVjngocYmG4cwL35KCLsV # 你的AccessKey Secret
+      bucket-name: link-big-event         # 你的Bucket名称

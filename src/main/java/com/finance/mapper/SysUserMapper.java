@@ -11,4 +11,8 @@ public interface SysUserMapper {
 
     // 插入新用户
     int insert(SysUser sysUser);
+
+    void update(SysUser user);
+
+    SysUser selectById(Long id);
 }

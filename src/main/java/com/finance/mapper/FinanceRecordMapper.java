@@ -1,54 +1,36 @@
 package com.finance.mapper;
 
 import com.finance.po.FinanceRecord;
+import com.finance.vo.ChartVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
-import java.util.Map;
 
 @Mapper
 public interface FinanceRecordMapper {
-    int insert(FinanceRecord record);
+    // 查询列表（关联分类表和账户表，显示名称）
+    List<FinanceRecord> selectList(@Param("userId") Long userId);
 
-    FinanceRecord selectByPrimaryKey(@Param("id") Long id, @Param("userId") Long userId);
+    // 查询单条
+    FinanceRecord selectById(Long id);
 
-    List<FinanceRecord> selectByUserId(@Param("userId") Long userId);
+    // 插入
+    void insert(FinanceRecord record);
 
-    List<FinanceRecord> selectByUserIdAndDateRange(@Param("userId") Long userId,
-                                                   @Param("startDate") LocalDate startDate,
-                                                   @Param("endDate") LocalDate endDate,
-                                                   @Param("type") Integer type,
-                                                   @Param("categoryId") Long categoryId,
-                                                   @Param("accountId") Long accountId);
+    // 更新
+    void update(FinanceRecord record);
 
-    int updateByPrimaryKeySelective(FinanceRecord record);
+    // 删除
+    void deleteById(Long id);
 
-    int deleteByPrimaryKey(@Param("id") Long id, @Param("userId") Long userId);
+    // 按月统计（给首页用的）
+    List<FinanceRecord> selectByMonth(@Param("userId") Long userId, @Param("month") String month);
 
-    // 统计指定月份的收入、支出
-    BigDecimal sumAmountByUserIdAndTypeAndMonth(@Param("userId") Long userId,
-                                                @Param("type") Integer type,
-                                                @Param("yearMonth") YearMonth yearMonth);
+    // ... 原有方法 ...
 
-    // 统计指定时间段内，按月份的收入支出趋势
-    List<Map<String, Object>> getMonthlyTrendByUserId(@Param("userId") Long userId,
-                                                      @Param("startDate") LocalDate startDate,
-                                                      @Param("endDate") LocalDate endDate);
+    // 统计某月各分类的支出 (饼图)
+    List<ChartVO> selectCategoryExpenseStats(@Param("userId") Long userId, @Param("month") String month);
 
-    // 统计指定时间段内，按支出类别汇总
-    List<Map<String, Object>> getExpenseCategorySummaryByUserId(@Param("userId") Long userId,
-                                                                @Param("startDate") LocalDate startDate,
-                                                                @Param("endDate") LocalDate endDate);
-
-    // 统计指定时间段内，按收入类别汇总
-    List<Map<String, Object>> getIncomeCategorySummaryByUserId(@Param("userId") Long userId,
-                                                               @Param("startDate") LocalDate startDate,
-                                                               @Param("endDate") LocalDate endDate);
-
-    // 获取某用户最新的记录ID
-    Long selectMaxIdByUserId(@Param("userId") Long userId);
+    // 统计某月每日收支 (折线图) - type: 1收入 2支出
+    List<ChartVO> selectDailyStats(@Param("userId") Long userId, @Param("month") String month, @Param("type") Integer type);
 }

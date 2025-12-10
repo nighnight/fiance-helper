@@ -1,144 +1,215 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>预算设置</title>
-    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <title>预算管理</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body>
-<div th:replace="common/header :: header"></div>
+<body class="bg-light">
 
-<div class="container mt-4">
-    <h2 class="mb-4">预算设置</h2>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">财务助手</a>
+        <span class="navbar-text text-white">预算管理</span>
+    </div>
+</nav>
 
-    <!-- 预算筛选和操作区域 -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">筛选预算</h5>
-            <div class="form-row">
-                <div class="form-group col-md-4">
-                    <label for="cycleType">预算周期</label>
-                    <select class="form-control" id="cycleType">
-                        <option value="1" selected>月度</option>
-                        <!-- <option value="2">季度</option> -->
-                        <!-- <option value="3">年度</option> -->
-                    </select>
-                </div>
-                <div class="form-group col-md-4">
-                    <label for="cycleValue">周期值</label>
-                    <input type="month" class="form-control" id="cycleValue" th:value="${currentMonth}">
-                </div>
-                <div class="form-group col-md-4 align-self-end">
-                    <button type="button" class="btn btn-info mr-2" id="filterBudgetsButton">查询</button>
-                    <a th:href="@{/budget/add}" class="btn btn-primary">新增预算</a>
-                </div>
+<div class="container">
+    <!-- 顶部工具栏 -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body py-3 d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center">
+                <label class="me-2 fw-bold">月份：</label>
+                <input type="month" id="monthPicker" class="form-control" style="width: 150px;">
+                <button class="btn btn-primary ms-2" onclick="loadData()">查询</button>
             </div>
+            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#budgetModal" onclick="resetForm()">
+                <i class="bi bi-plus-lg"></i> 设置预算
+            </button>
         </div>
     </div>
 
-    <!-- 预算列表 -->
-    <div class="data-table">
-        <table class="table table-hover">
-            <thead>
-            <tr>
-                <th>预算类别</th>
-                <th>预算周期</th>
-                <th>预算金额</th>
-                <th>已使用金额</th>
-                <th>剩余金额</th>
-                <th>使用进度</th>
-                <th>操作</th>
-            </tr>
-            </thead>
-            <tbody id="budgetTableBody">
-            <tr><td colspan="7" class="text-center">请选择周期查询预算</td></tr>
-            </tbody>
-        </table>
+    <!-- 列表 -->
+    <div id="budgetList"></div>
+
+    <div class="text-center mt-4">
+        <a href="/" class="text-decoration-none">返回首页</a>
     </div>
 </div>
 
-<div th:replace="common/footer :: footer"></div>
+<!-- 新增/编辑 模态框 -->
+<div class="modal fade" id="budgetModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">设置预算</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="budgetForm">
+                    <div class="mb-3">
+                        <label class="form-label">月份</label>
+                        <input type="month" class="form-control" id="modalMonth" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">分类</label>
+                        <select class="form-select" id="modalCategory"></select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">预算金额</label>
+                        <input type="number" class="form-control" id="modalAmount" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                <button type="button" class="btn btn-primary" onclick="submitBudget()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-<script th:src="@{/static/lib/jquery.min.js}"></script>
-<script th:src="@{/static/lib/bootstrap.min.js}"></script>
-<script th:src="@{/static/js/common.js}"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/js/bootstrap.bundle.min.js"></script>
+
 <script>
-    $(function() {
-        // 默认加载当前月的预算
-        loadBudgets();
+    $(document).ready(function() {
+        // 默认选中当月
+        let now = new Date().toISOString().slice(0, 7);
+        $('#monthPicker').val(now);
+        $('#modalMonth').val(now);
 
-        // 绑定筛选按钮事件
-        $('#filterBudgetsButton').click(function() {
-            loadBudgets();
-        });
-
-        function loadBudgets() {
-            let cycleType = $('#cycleType').val(); // 1: 月度
-            let cycleValue = $('#cycleValue').val(); // yyyy-MM
-
-            if (!cycleValue) {
-                showMessage('请选择周期值', 'warning');
-                return;
-            }
-
-            sendAjaxRequest('/budget/api/current', 'GET', { cycleType: cycleType, cycleValue: cycleValue }, function(budgets) {
-                renderBudgetsTable(budgets);
-            });
-        }
-
-        function renderBudgetsTable(budgets) {
-            let tbody = $('#budgetTableBody');
-            tbody.empty();
-            if (budgets && budgets.length > 0) {
-                budgets.forEach(function(budget) {
-                    let progressClass = '';
-                    if (budget.progress > 100) {
-                        progressClass = 'bg-danger'; // 超出预算
-                    } else if (budget.progress > 80) {
-                        progressClass = 'bg-warning'; // 接近预算
-                    } else {
-                        progressClass = 'bg-primary';
-                    }
-                    let row = `
-                            <tr data-id="${budget.id}">
-                                <td>${budget.categoryName}</td>
-                                <td>${budget.cycleTypeName} (${budget.cycleValue})</td>
-                                <td>¥ ${budget.budgetAmount.toFixed(2)}</td>
-                                <td>¥ ${budget.usedAmount.toFixed(2)}</td>
-                                <td>¥ ${budget.remainingAmount.toFixed(2)}</td>
-                                <td>
-                                    <div class="progress">
-                                        <div class="progress-bar ${progressClass}" role="progressbar" style="width: ${Math.min(budget.progress, 100).toFixed(2)}%;" aria-valuenow="${budget.progress.toFixed(2)}" aria-valuemin="0" aria-valuemax="100">
-                                            ${budget.progress.toFixed(2)}%
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="action-buttons">
-                                    <a href="/budget/edit/${budget.id}" class="btn btn-sm btn-warning">编辑</a>
-                                    <button class="btn btn-sm btn-danger delete-btn" data-id="${budget.id}">删除</button>
-                                </td>
-                            </tr>
-                        `;
-                    tbody.append(row);
-                });
-            } else {
-                tbody.append('<tr><td colspan="7" class="text-center">当前周期暂无预算</td></tr>');
-            }
-        }
-
-        // 绑定删除按钮事件
-        $('#budgetTableBody').on('click', '.delete-btn', function() {
-            let budgetId = $(this).data('id');
-            confirmAction('确定要删除这条预算吗？', function() {
-                sendAjaxRequest('/budget/api/delete/' + budgetId, 'DELETE', null, function() {
-                    showMessage('预算删除成功！', 'success');
-                    loadBudgets(); // 重新加载列表
-                });
-            });
-        });
+        loadCategories(); // 加载分类下拉框
+        loadData();       // 加载列表
     });
+
+    function loadCategories() {
+        $.ajax({
+            url: '/category/list',
+            type: 'GET',
+            success: function(res) {
+                if(res.data) {
+                    let html = '';
+                    // 只筛选出支出分类 (type=2)
+                    res.data.filter(c => c.type === 2).forEach(c => {
+                        html += `<option value="${c.id}">${c.categoryName}</option>`;
+                    });
+                    $('#modalCategory').html(html);
+                }
+            }
+        });
+    }
+
+    function loadData() {
+        let month = $('#monthPicker').val();
+        $.ajax({
+            url: '/budget/list',
+            type: 'GET',
+            data: { month: month },
+            success: function(res) {
+                if(res.code === 200) {
+                    renderList(res.data);
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
+
+    function renderList(list) {
+        if (!list || list.length === 0) {
+            $('#budgetList').html('<div class="alert alert-light text-center">本月暂无预算设置</div>');
+            return;
+        }
+
+        let html = '<div class="row">';
+        list.forEach(item => {
+            // 计算百分比
+            let percent = 0;
+            if(item.budgetAmount > 0) {
+                percent = (item.usedAmount / item.budgetAmount) * 100;
+            }
+            percent = Math.min(100, percent).toFixed(1);
+
+            // 进度条颜色：超过80%变黄，超过100%变红
+            let progressClass = 'bg-success';
+            if(percent >= 80) progressClass = 'bg-warning';
+            if(percent >= 100) progressClass = 'bg-danger';
+
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <h5 class="card-title fw-bold">${item.categoryName}</h5>
+                                <div>
+                                    <span class="badge bg-light text-dark border">预算 ${item.budgetAmount}</span>
+                                    <i class="bi bi-trash text-danger ms-2" style="cursor:pointer" onclick="deleteBudget(${item.id})"></i>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between small text-muted mb-1">
+                                <span>已用: <span class="${item.usedAmount > item.budgetAmount ? 'text-danger' : ''}">${item.usedAmount}</span></span>
+                                <span>${percent}%</span>
+                            </div>
+
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar ${progressClass}" role="progressbar" style="width: ${percent}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        $('#budgetList').html(html);
+    }
+
+    function resetForm() {
+        $('#modalAmount').val('');
+        // 同步外部选择的月份
+        $('#modalMonth').val($('#monthPicker').val());
+    }
+
+    function submitBudget() {
+        let data = {
+            cycleValue: $('#modalMonth').val(),
+            categoryId: $('#modalCategory').val(),
+            budgetAmount: $('#modalAmount').val()
+        };
+
+        if(!data.budgetAmount) {
+            alert("请输入金额");
+            return;
+        }
+
+        $.ajax({
+            url: '/budget/save',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(res) {
+                if(res.code === 200) {
+                    $('#budgetModal').modal('hide'); // 关闭弹窗
+                    loadData(); // 刷新列表
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
+
+    function deleteBudget(id) {
+        if(!confirm("确定删除该预算吗？")) return;
+        $.ajax({
+            url: '/budget/' + id,
+            type: 'DELETE',
+            success: function(res) {
+                loadData();
+            }
+        });
+    }
 </script>
 </body>
 </html>

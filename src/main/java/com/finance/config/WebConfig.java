@@ -27,8 +27,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/css/**",
                         "/js/**",
                         "/lib/**",
-                        "/images/**",
-                        "/favicon.ico",
+                        "/img/**",
+                        "/ficon.png",
 
                         // === Swagger/Knif4j 放行 (关键) ===
                         "/doc.html",              // 如果用Knif4j

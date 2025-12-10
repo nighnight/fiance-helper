@@ -62,4 +62,25 @@ public class SysUserServiceImpl implements SysUserService {
         sysUserMapper.insert(sysUser);
         return Result.success("注册成功");
     }
+
+    @Override
+    public void updateInfo(SysUser user, HttpSession session) {
+        // 1. 更新数据库
+        sysUserMapper.update(user);
+        // 2. 更新 Session 中的用户信息 (这一步很重要，否则页面右上角不会变)
+        SysUser currentUser = sysUserMapper.selectById(user.getId());
+        currentUser.setPassword(null); // 安全起见擦除密码
+        session.setAttribute("USER_SESSION", currentUser);
+    }
+
+    @Override
+    public void updatePassword(Long userId, String oldPwd, String newPwd) {
+        SysUser user = sysUserMapper.selectById(userId);
+        if (!passwordEncoder.matches(oldPwd, user.getPassword())) {
+            throw new RuntimeException("原密码错误");
+        }
+        // 加密新密码
+        user.setPassword(passwordEncoder.encode(newPwd));
+        sysUserMapper.update(user);
+    }
 }

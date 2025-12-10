@@ -1,103 +1,152 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>类别管理</title>
-    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <title>收支分类</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
 </head>
-<body>
-<div th:replace="common/header :: header"></div>
+<body class="bg-light">
 
-<div class="container mt-4">
-    <h2 class="mb-4">类别管理</h2>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">财务助手</a>
+        <span class="navbar-text text-white">分类管理</span>
+    </div>
+</nav>
 
-    <div class="mb-3 text-right">
-        <a th:href="@{/category/add}" class="btn btn-primary">添加新类别</a>
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>分类列表</h3>
+        <a href="/category/toAdd" class="btn btn-success">
+            <i class="bi bi-plus-lg"></i> 新增分类
+        </a>
     </div>
 
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="data-table">
-                <h4>收入类别</h4>
-                <table class="table table-hover">
-                    <thead>
-                    <tr>
-                        <th>名称</th>
-                        <th>排序</th>
-                        <th>是否系统默认</th>
-                        <th>操作</th>
-                    </tr>
-                    </thead>
-                    <tbody id="incomeCategoryTableBody">
-                    <tr th:each="category : ${incomeCategories}" th:data-id="${category.id}">
-                        <td th:text="${category.categoryName}">工资</td>
-                        <td th:text="${category.sort}">0</td>
-                        <td><span th:if="${category.isDefault == 1}" class="badge badge-success">是</span><span th:if="${category.isDefault == 0}" class="badge badge-secondary">否</span></td>
-                        <td class="action-buttons">
-                            <a th:if="${category.isDefault == 0}" th:href="@{'/category/edit/' + ${category.id}}" class="btn btn-sm btn-warning">编辑</a>
-                            <button th:if="${category.isDefault == 0}" class="btn btn-sm btn-danger delete-btn" th:data-id="${category.id}">删除</button>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(incomeCategories)}">
-                        <td colspan="4" class="text-center">暂无收入类别</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <!-- 选项卡：切换收入/支出 -->
+    <ul class="nav nav-tabs mb-3" id="categoryTab">
+        <li class="nav-item">
+            <a class="nav-link active" href="#" onclick="filterType(2)">支出类别</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="#" onclick="filterType(1)">收入类别</a>
+        </li>
+    </ul>
 
-        <div class="col-md-6 mb-4">
-            <div class="data-table">
-                <h4>支出类别</h4>
-                <table class="table table-hover">
-                    <thead>
-                    <tr>
-                        <th>名称</th>
-                        <th>排序</th>
-                        <th>是否系统默认</th>
-                        <th>操作</th>
-                    </tr>
-                    </thead>
-                    <tbody id="expenseCategoryTableBody">
-                    <tr th:each="category : ${expenseCategories}" th:data-id="${category.id}">
-                        <td th:text="${category.categoryName}">餐饮</td>
-                        <td th:text="${category.sort}">0</td>
-                        <td><span th:if="${category.isDefault == 1}" class="badge badge-success">是</span><span th:if="${category.isDefault == 0}" class="badge badge-secondary">否</span></td>
-                        <td class="action-buttons">
-                            <a th:if="${category.isDefault == 0}" th:href="@{'/category/edit/' + ${category.id}}" class="btn btn-sm btn-warning">编辑</a>
-                            <button th:if="${category.isDefault == 0}" class="btn btn-sm btn-danger delete-btn" th:data-id="${category.id}">删除</button>
-                        </td>
-                    </tr>
-                    <tr th:if="${#lists.isEmpty(expenseCategories)}">
-                        <td colspan="4" class="text-center">暂无支出类别</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light">
+                <tr>
+                    <th>名称</th>
+                    <th>类型</th>
+                    <th>来源</th>
+                    <th>排序</th>
+                    <th style="width: 150px;">操作</th>
+                </tr>
+                </thead>
+                <tbody id="categoryTableBody">
+                <!-- 数据动态加载 -->
+                </tbody>
+            </table>
         </div>
+    </div>
+
+    <div class="mt-3 text-center">
+        <a href="/" class="btn btn-link text-decoration-none">返回首页</a>
     </div>
 </div>
 
-<div th:replace="common/footer :: footer"></div>
-
-<script th:src="@{/static/lib/jquery.min.js}"></script>
-<script th:src="@{/static/lib/bootstrap.min.js}"></script>
-<script th:src="@{/static/js/common.js}"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 <script>
-    $(function() {
-        // 绑定删除按钮事件
-        $('.data-table').on('click', '.delete-btn', function() {
-            let categoryId = $(this).data('id');
-            confirmAction('确定要删除这个类别吗？', function() {
-                sendAjaxRequest('/category/api/delete/' + categoryId, 'DELETE', null, function() {
-                    showMessage('类别删除成功！', 'success');
-                    window.location.reload(); // 删除成功后刷新页面
-                });
-            });
-        });
+    let allCategories = []; // 存储所有数据
+    let currentType = 2;    // 默认显示支出(2)
+
+    $(document).ready(function() {
+        loadData();
     });
+
+    function filterType(type) {
+        currentType = type;
+        // 切换Tab样式
+        $('.nav-link').removeClass('active');
+        if(type === 2) $('.nav-link:eq(0)').addClass('active');
+        else $('.nav-link:eq(1)').addClass('active');
+
+        renderTable();
+    }
+
+    function loadData() {
+        $.ajax({
+            url: '/category/list',
+            type: 'GET',
+            success: function(res) {
+                if (res.code === 200) {
+                    allCategories = res.data;
+                    renderTable();
+                } else {
+                    alert("加载失败：" + res.msg);
+                }
+            }
+        });
+    }
+
+    function renderTable() {
+        // 前端过滤数据
+        let list = allCategories.filter(item => item.type === currentType);
+
+        var html = '';
+        if (list.length === 0) {
+            html = '<tr><td colspan="5" class="text-center text-muted py-4">暂无数据</td></tr>';
+        } else {
+            $.each(list, function(index, item) {
+                let typeBadge = item.type === 1
+                    ? '<span class="badge bg-success">收入</span>'
+                    : '<span class="badge bg-danger">支出</span>';
+
+                let sourceBadge = item.isDefault === 1
+                    ? '<span class="badge bg-secondary">系统默认</span>'
+                    : '<span class="badge bg-info text-dark">自定义</span>';
+
+                // 系统默认分类不可操作
+                let btns = '';
+                if(item.isDefault === 0) {
+                    btns = '<button class="btn btn-sm btn-outline-primary me-2" onclick="toEdit(' + item.id + ')"><i class="bi bi-pencil"></i></button>' +
+                        '<button class="btn btn-sm btn-outline-danger" onclick="deleteCategory(' + item.id + ')"><i class="bi bi-trash"></i></button>';
+                } else {
+                    btns = '<span class="text-muted small">不可操作</span>';
+                }
+
+                html += '<tr>' +
+                    '<td>' + item.categoryName + '</td>' +
+                    '<td>' + typeBadge + '</td>' +
+                    '<td>' + sourceBadge + '</td>' +
+                    '<td>' + item.sort + '</td>' +
+                    '<td>' + btns + '</td>' +
+                    '</tr>';
+            });
+        }
+        $('#categoryTableBody').html(html);
+    }
+
+    function toEdit(id) {
+        window.location.href = '/category/toEdit?id=' + id;
+    }
+
+    function deleteCategory(id) {
+        if(!confirm("确定删除该分类吗？")) return;
+        $.ajax({
+            url: '/category/' + id,
+            type: 'DELETE',
+            success: function(res) {
+                if(res.code === 200) {
+                    loadData(); // 刷新
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
 </script>
 </body>
 </html>

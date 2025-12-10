@@ -32,3 +32,26 @@ server:
 file:
   upload-dir: D:/finance_helper_uploads/ # 根据您的操作系统修改，例如 /var/finance_helper_uploads/
   # 注意：Windows路径使用 / 或 \\，Linux使用 /
+# ... 原有配置 ...
+
+aliyun:
+  oss:
+    endpoint: ${finance.aliyun.oss.endpoint}  # 你的Bucket所在地域节点
+    access-key-id: ${finance.aliyun.oss.access-key-id}     # 你的AccessKey ID
+    access-key-secret: ${finance.aliyun.oss.access-key-secret} # 你的AccessKey Secret
+    bucket-name: ${finance.aliyun.oss.bucket-name}         # 你的Bucket名称
+
+
+# ... 原有配置 ...
+
+# PageHelper 分页插件配置
+pagehelper:
+  helper-dialect: mysql         # 指定数据库方言
+  reasonable-page-num: true     # 开启分页合理化，如果页码<1则查第一页，>总页数则查最后一页
+  support-methods-arguments: true # 支持通过Mapper接口方法参数传递分页参数
+  params: pageNum=pageNum;pageSize=pageSize; # 参数映射
+
+logging:
+  level:
+    # 将你的 Mapper 接口所在的包路径设置为 DEBUG 级别
+    com.finance.mapper: DEBUG

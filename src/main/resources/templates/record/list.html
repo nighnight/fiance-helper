@@ -1,85 +1,169 @@
 <!DOCTYPE html>
-<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>收支记录</title>
-    <link rel="stylesheet" th:href="@{/static/lib/bootstrap.min.css}">
-    <link rel="stylesheet" th:href="@{/static/css/style.css}">
+    <title>收支明细 - 财务助手</title>
+    <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .record-card { border-left: 5px solid #e9ecef; transition: transform 0.2s ease-in-out; }
+        .record-card:hover { transform: translateX(5px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .income { border-left-color: #198754; }
+        .expense { border-left-color: #dc3545; }
+        /* 分页控件样式 */
+        .pagination .page-link { cursor: pointer; }
+    </style>
 </head>
-<body>
-<div th:replace="common/header :: header"></div>
+<body class="bg-light">
 
-<div class="container mt-4">
-    <h2 class="mb-4">收支记录</h2>
+<nav class="navbar navbar-dark bg-primary mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">财务助手</a>
+        <span class="navbar-text text-white">收支明细</span>
+    </div>
+</nav>
 
-    <!-- 筛选条件 -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">筛选条件</h5>
-            <div class="form-row">
-                <div class="form-group col-md-3">
-                    <label for="startDate">开始日期</label>
-                    <input type="date" class="form-control" id="startDate" th:value="${startDate}">
-                </div>
-                <div class="form-group col-md-3">
-                    <label for="endDate">结束日期</label>
-                    <input type="date" class="form-control" id="endDate" th:value="${endDate}">
-                </div>
-                <div class="form-group col-md-2">
-                    <label for="filterType">类型</label>
-                    <select class="form-control" id="filterType">
-                        <option value="">所有</option>
-                        <option value="1">收入</option>
-                        <option value="2">支出</option>
-                    </select>
-                </div>
-                <div class="form-group col-md-2">
-                    <label for="filterCategoryId">类别</label>
-                    <select class="form-control" id="filterCategoryId">
-                        <option value="">所有类别</option>
-                    </select>
-                </div>
-                <div class="form-group col-md-2">
-                    <label for="filterAccountId">账户</label>
-                    <select class="form-control" id="filterAccountId">
-                        <option value="">所有账户</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group text-right">
-                <button type="button" class="btn btn-primary" id="filterButton">筛选</button>
-                <a th:href="@{/record/add}" class="btn btn-success ml-2">新增记录</a>
-            </div>
+<div class="container" style="max-width: 800px;">
+    <!-- 顶部操作栏 -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3>账单记录</h3>
+        <div>
+            <a href="/record/export" class="btn btn-outline-success">
+                <i class="bi bi-download"></i> 导出 Excel
+            </a>
+            <a href="/record/toAdd" class="btn btn-primary ms-2">
+                <i class="bi bi-pencil-square"></i> 记一笔
+            </a>
         </div>
     </div>
 
-    <!-- 记录列表 -->
-    <div class="data-table">
-        <table class="table table-hover">
-            <thead>
-            <tr>
-                <th>日期</th>
-                <th>类型</th>
-                <th>类别</th>
-                <th>账户</th>
-                <th>金额</th>
-                <th>备注</th>
-                <th>操作</th>
-            </tr>
-            </thead>
-            <tbody id="recordTableBody">
-            <tr><td colspan="7" class="text-center">加载中...</td></tr>
-            </tbody>
-        </table>
+    <!-- 列表容器 -->
+    <div id="recordList">
+        <div class="text-center py-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="text-muted mt-2">正在加载账单...</p>
+        </div>
+    </div>
+
+    <!-- 分页控件容器 -->
+    <nav class="mt-4 d-flex justify-content-center">
+        <ul class="pagination shadow-sm" id="pagination">
+            <!-- JS 动态生成分页按钮 -->
+        </ul>
+    </nav>
+
+    <div class="mt-4 text-center">
+        <a href="/" class="text-decoration-none">返回首页</a>
     </div>
 </div>
 
-<div th:replace="common/footer :: footer"></div>
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 
-<script th:src="@{/static/lib/jquery.min.js}"></script>
-<script th:src="@{/static/lib/bootstrap.min.js}"></script>
-<script th:src="@{/static/js/common.js}"></script>
-<script th:src="@{/static/js/record.js}"></script>
+<script>
+    $(document).ready(function() {
+        loadData(1); // 默认加载第一页
+    });
+
+    // 加载指定页码的数据
+    function loadData(pageNum) {
+        $('#recordList').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>');
+
+        $.ajax({
+            url: '/record/list',
+            type: 'GET',
+            data: {
+                pageNum: pageNum,
+                pageSize: 10 // 每页显示10条
+            },
+            success: function(res) {
+                if (res.code === 200) {
+                    renderList(res.data.list); // 渲染列表
+                    renderPagination(res.data); // 渲染分页控件
+                } else {
+                    $('#recordList').html('<div class="alert alert-danger text-center">数据加载失败：' + res.msg + '</div>');
+                }
+            }
+        });
+    }
+
+    // 渲染列表
+    function renderList(list) {
+        if (!list || list.length === 0) {
+            $('#recordList').html('<div class="alert alert-secondary text-center">暂无收支记录</div>');
+            return;
+        }
+
+        let html = '';
+        $.each(list, function(index, item) {
+            // ... (这部分代码和之前一样) ...
+            let isIncome = (item.type === 1);
+            let themeClass = isIncome ? 'income' : 'expense';
+            let amountClass = isIncome ? 'text-success' : 'text-danger';
+            let symbol = isIncome ? '+' : '-';
+
+            html += `
+                <div class="card shadow-sm mb-3 record-card ${themeClass}">
+                    <div class="card-body d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5 class="mb-1">${item.categoryName || '未分类'} <span class="badge bg-light text-dark border ms-2" style="font-size:0.7rem">${item.accountName || '未知账户'}</span></h5>
+                            <small class="text-muted">
+                                <i class="bi bi-calendar3"></i> ${item.recordDate} | ${item.remark || '无备注'}
+                            </small>
+                        </div>
+                        <div class="text-end">
+                            <h4 class="${amountClass} fw-bold mb-1">${symbol}${item.amount}</h4>
+                            <div>
+                                <a href="javascript:void(0)" onclick="toEdit(${item.id})" class="text-decoration-none small me-2">编辑</a>
+                                <a href="javascript:void(0)" onclick="deleteRecord(${item.id})" class="text-decoration-none small text-danger">删除</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        $('#recordList').html(html);
+    }
+
+    // 渲染分页控件
+    function renderPagination(pageInfo) {
+        $('#pagination').empty();
+        if(pageInfo.pages <= 1) return; // 只有一页就不显示
+
+        // 上一页
+        let prevLi = `<li class="page-item ${pageInfo.isFirstPage ? 'disabled' : ''}"><a class="page-link" onclick="loadData(${pageInfo.prePage})">上一页</a></li>`;
+        $('#pagination').append(prevLi);
+
+        // 页码
+        for(let i = 1; i <= pageInfo.pages; i++) {
+            let pageLi = `<li class="page-item ${i === pageInfo.pageNum ? 'active' : ''}"><a class="page-link" onclick="loadData(${i})">${i}</a></li>`;
+            $('#pagination').append(pageLi);
+        }
+
+        // 下一页
+        let nextLi = `<li class="page-item ${pageInfo.isLastPage ? 'disabled' : ''}"><a class="page-link" onclick="loadData(${pageInfo.nextPage})">下一页</a></li>`;
+        $('#pagination').append(nextLi);
+    }
+
+    // ... toEdit, deleteRecord 函数保持不变 ...
+    function toEdit(id) {
+        window.location.href = '/record/toEdit?id=' + id;
+    }
+
+    function deleteRecord(id) {
+        if(!confirm("确定删除吗？")) return;
+        $.ajax({
+            url: '/record/' + id,
+            type: 'DELETE',
+            success: function(res) {
+                if(res.code === 200) {
+                    loadData(1); // 删除后回到第一页
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
+</script>
 </body>
 </html>

@@ -54,4 +54,37 @@ public class SysUserController {
         session.invalidate();
         return "redirect:/user/login";
     }
+
+    // === 页面跳转 ===
+    @GetMapping("/profile")
+    public String profilePage() { return "user/profile"; }
+
+    @GetMapping("/password")
+    public String passwordPage() { return "user/password"; }
+
+    // === 业务接口 ===
+    @PutMapping("/updateInfo")
+    @ResponseBody
+    public Result updateInfo(@RequestBody SysUser user, HttpSession session) {
+        // 从Session获取当前ID，防止越权修改
+        SysUser currentUser = (SysUser) session.getAttribute("USER_SESSION");
+        user.setId(currentUser.getId());
+
+        sysUserService.updateInfo(user, session);
+        return Result.success();
+    }
+
+    @PutMapping("/updatePassword")
+    @ResponseBody
+    public Result updatePassword(@RequestParam String oldPwd, @RequestParam String newPwd, HttpSession session) {
+        SysUser currentUser = (SysUser) session.getAttribute("USER_SESSION");
+        try {
+            sysUserService.updatePassword(currentUser.getId(), oldPwd, newPwd);
+            // 修改密码后销毁Session，强制重登
+            session.invalidate();
+            return Result.success();
+        } catch (RuntimeException e) {
+            return Result.error(e.getMessage());
+        }
+    }
 }

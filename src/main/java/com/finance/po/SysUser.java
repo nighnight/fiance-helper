@@ -34,4 +34,9 @@ public class SysUser {
 
     @Schema(description = "状态 1:正常 0:禁用", hidden = true)
     private Integer status;
+
+    // ... 其他字段 ...
+    @Schema(description = "头像URL")
+    private String avatar;
+// ...
 }

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>编辑记录</title>
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+  <div class="card mx-auto shadow" style="max-width: 500px;">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0">编辑记录</h5>
+    </div>
+    <div class="card-body p-4">
+      <form id="editForm">
+        <input type="hidden" id="recordId">
+
+        <div class="mb-4 text-center">
+          <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="type" id="type2" value="2" onchange="filterCategories()">
+            <label class="btn btn-outline-danger" for="type2">支出</label>
+
+            <input type="radio" class="btn-check" name="type" id="type1" value="1" onchange="filterCategories()">
+            <label class="btn btn-outline-success" for="type1">收入</label>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">金额</label>
+          <input type="number" class="form-control" id="amount" step="0.01" required>
+          <div class="form-text text-danger">修改金额会重新计算账户余额</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">日期</label>
+          <input type="date" class="form-control" id="recordDate" required>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">分类</label>
+          <select class="form-select" id="categorySelect"></select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">账户</label>
+          <select class="form-select" id="accountSelect"></select>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">备注</label>
+          <textarea class="form-control" id="remark" rows="2"></textarea>
+        </div>
+
+        <div class="d-grid gap-2">
+          <button type="button" class="btn btn-primary" onclick="submitEdit()">保存修改</button>
+          <a href="/record/index" class="btn btn-link text-muted">取消</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+  let allCategories = [];
+
+  $(document).ready(function() {
+    const id = new URLSearchParams(window.location.search).get('id');
+    if(!id) {
+      window.location.href = '/record/index';
+      return;
+    }
+    $('#recordId').val(id);
+
+    // 核心逻辑：必须先加载完所有基础数据(分类、账户)，再去加载记录详情进行回显
+    // 使用 Promise.all 等待两个请求完成
+    Promise.all([loadAccounts(), loadCategories()]).then(() => {
+      loadRecordDetail(id);
+    });
+  });
+
+  function loadAccounts() {
+    return $.ajax({
+      url: '/account/list',
+      type: 'GET',
+      success: function(res) {
+        let html = '';
+        if(res.data) {
+          res.data.forEach(acc => {
+            html += `<option value="${acc.id}">${acc.accountName}</option>`;
+          });
+        }
+        $('#accountSelect').html(html);
+      }
+    });
+  }
+
+  function loadCategories() {
+    return $.ajax({
+      url: '/category/list',
+      type: 'GET',
+      success: function(res) {
+        allCategories = res.data || [];
+      }
+    });
+  }
+
+  function loadRecordDetail(id) {
+    $.ajax({
+      url: '/record/' + id,
+      type: 'GET',
+      success: function(res) {
+        if(res.code === 200) {
+          let r = res.data;
+
+          // 1. 设置类型单选框
+          if(r.type === 1) $('#type1').prop('checked', true);
+          else $('#type2').prop('checked', true);
+
+          // 2. 渲染分类下拉框 (根据类型)
+          filterCategories();
+
+          // 3. 选中对应的值
+          $('#amount').val(r.amount);
+          $('#recordDate').val(r.recordDate);
+          $('#categorySelect').val(r.categoryId);
+          $('#accountSelect').val(r.accountId);
+          $('#remark').val(r.remark);
+        }
+      }
+    });
+  }
+
+  function filterCategories() {
+    let type = parseInt($('input[name="type"]:checked').val());
+    let html = '';
+    let filtered = allCategories.filter(c => c.type === type);
+    filtered.forEach(c => {
+      html += `<option value="${c.id}">${c.categoryName}</option>`;
+    });
+    $('#categorySelect').html(html);
+  }
+
+  function submitEdit() {
+    let data = {
+      id: $('#recordId').val(),
+      type: $('input[name="type"]:checked').val(),
+      amount: $('#amount').val(),
+      recordDate: $('#recordDate').val(),
+      categoryId: $('#categorySelect').val(),
+      accountId: $('#accountSelect').val(),
+      remark: $('#remark').val()
+    };
+
+    $.ajax({
+      url: '/record', // PUT
+      type: 'PUT',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: function(res) {
+        if(res.code === 200) {
+          alert("修改成功");
+          window.location.href = '/record/index';
+        } else {
+          alert(res.msg);
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>

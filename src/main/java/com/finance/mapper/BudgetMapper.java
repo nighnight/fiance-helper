@@ -3,31 +3,19 @@ package com.finance.mapper;
 import com.finance.po.Budget;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-import java.math.BigDecimal;
 import java.util.List;
 
 @Mapper
 public interface BudgetMapper {
-    int insert(Budget record);
+    // 查询某用户某月的预算列表
+    List<Budget> selectList(@Param("userId") Long userId, @Param("cycleValue") String cycleValue);
 
-    Budget selectByPrimaryKey(@Param("id") Long id, @Param("userId") Long userId);
+    Budget selectById(Long id);
 
-    Budget selectByUniqueKey(@Param("userId") Long userId,
-                             @Param("categoryId") Long categoryId,
-                             @Param("cycleType") Integer cycleType,
-                             @Param("cycleValue") String cycleValue);
+    // 检查是否存在重复预算
+    Budget selectUnique(@Param("userId") Long userId, @Param("categoryId") Long categoryId, @Param("cycleValue") String cycleValue);
 
-    List<Budget> selectByUserId(@Param("userId") Long userId);
-
-    List<Budget> selectByUserIdAndCycle(@Param("userId") Long userId,
-                                        @Param("cycleType") Integer cycleType,
-                                        @Param("cycleValue") String cycleValue);
-
-    int updateByPrimaryKeySelective(Budget record);
-
-    int deleteByPrimaryKey(@Param("id") Long id, @Param("userId") Long userId);
-
-    // 更新预算已使用金额
-    int updateUsedAmount(@Param("id") Long id, @Param("usedAmountDelta") BigDecimal usedAmountDelta);
+    void insert(Budget budget);
+    void update(Budget budget);
+    void deleteById(Long id);
 }

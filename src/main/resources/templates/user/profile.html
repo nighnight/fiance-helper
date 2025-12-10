@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>个人中心</title>
+  <!-- 引入 Bootstrap 5 CSS -->
+  <link href="https://cdn.bootcdn.net/ajax/libs/twitter-bootstrap/5.3.1/css/bootstrap.min.css" rel="stylesheet">
+  <!-- 引入图标库 -->
+  <link href="https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.1/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body { background-color: #f8f9fa; }
+
+    /* 头像样式 */
+    .avatar-container {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto;
+      cursor: pointer;
+    }
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .avatar-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 30px;
+      background: rgba(0,0,0,0.6);
+      color: #fff;
+      font-size: 12px;
+      line-height: 30px;
+      text-align: center;
+      border-bottom-left-radius: 50px;
+      border-bottom-right-radius: 50px;
+      display: none;
+    }
+    .avatar-container:hover .avatar-overlay { display: block; }
+  </style>
+</head>
+<body class="bg-light">
+
+<!-- 导航栏 -->
+<nav class="navbar navbar-dark bg-primary mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="/">财务助手</a>
+    <span class="navbar-text text-white">个人中心</span>
+  </div>
+</nav>
+
+<div class="container" style="max-width: 600px;">
+  <div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+      <h5 class="mb-0 fw-bold">基本资料</h5>
+    </div>
+    <div class="card-body p-4 text-center">
+
+      <!-- 1. 头像上传区域 -->
+      <div class="avatar-container mb-4" onclick="$('#fileInput').click()">
+        <!-- 如果有头像显示头像，没有显示默认图 -->
+        <img th:src="${session.USER_SESSION.avatar != null && session.USER_SESSION.avatar != '' ? session.USER_SESSION.avatar : 'https://cdn.bootcdn.net/ajax/libs/bootstrap-icons/1.11.1/icons/person-circle.svg'}"
+             id="avatarPreview" class="avatar-img">
+        <div class="avatar-overlay">更换头像</div>
+      </div>
+
+      <!-- 隐藏的文件输入框 -->
+      <input type="file" id="fileInput" style="display: none" accept="image/*" onchange="uploadAvatar()">
+
+      <!-- 关键：隐藏域，用于存储上传成功后的 URL，提交表单时使用 -->
+      <input type="hidden" id="avatarUrl" th:value="${session.USER_SESSION.avatar}">
+
+      <!-- 2. 表单区域 -->
+      <form id="profileForm" class="text-start">
+        <div class="mb-3">
+          <label class="form-label text-muted">用户名 (不可修改)</label>
+          <input type="text" class="form-control bg-light" th:value="${session.USER_SESSION.username}" disabled>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">昵称</label>
+          <input type="text" class="form-control" id="nickname" th:value="${session.USER_SESSION.nickname}">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">手机号</label>
+          <input type="text" class="form-control" id="phone" th:value="${session.USER_SESSION.phone}">
+        </div>
+
+        <div class="mb-4">
+          <label class="form-label">邮箱</label>
+          <input type="text" class="form-control" id="email" th:value="${session.USER_SESSION.email}">
+        </div>
+
+        <div class="d-grid gap-2">
+          <button type="button" class="btn btn-primary" onclick="saveProfile()">保存修改</button>
+          <a href="/user/password" class="btn btn-outline-danger">修改密码</a>
+          <a href="/" class="btn btn-link text-decoration-none text-muted">返回首页</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+<script>
+  // 1. 处理头像上传
+  function uploadAvatar() {
+    var file = $('#fileInput')[0].files[0];
+    if(!file) return;
+
+    // 校验文件大小 (例如限制 2MB)
+    if(file.size > 2 * 1024 * 1024) {
+      alert("图片大小不能超过 2MB");
+      return;
+    }
+
+    var formData = new FormData();
+    formData.append("file", file);
+
+    // 显示上传中状态（可选优化）
+    $('#avatarPreview').css('opacity', '0.5');
+
+    $.ajax({
+      url: '/common/upload',
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      success: function(res) {
+        $('#avatarPreview').css('opacity', '1');
+        console.log("上传响应:", res); // 调试日志
+
+        if(res.code === 200) {
+          var newUrl = res.data;
+          // A. 立即回显图片
+          $('#avatarPreview').attr('src', newUrl);
+          // B. 将 URL 填入隐藏域，等待保存
+          $('#avatarUrl').val(newUrl);
+
+          alert("图片上传成功！请记得点击【保存修改】按钮。");
+        } else {
+          alert("头像上传失败：" + res.msg);
+        }
+      },
+      error: function() {
+        $('#avatarPreview').css('opacity', '1');
+        alert("网络错误，上传失败");
+      }
+    });
+  }
+
+  // 2. 提交整个表单
+  function saveProfile() {
+    // 获取数据
+    var data = {
+      nickname: $('#nickname').val(),
+      phone: $('#phone').val(),
+      email: $('#email').val(),
+      avatar: $('#avatarUrl').val() // 获取隐藏域里的图片链接
+    };
+
+    console.log("提交数据:", data); // 调试日志
+
+    $.ajax({
+      url: '/user/updateInfo',
+      type: 'PUT',
+      contentType: 'application/json',
+      data: JSON.stringify(data),
+      success: function(res) {
+        if(res.code === 200) {
+          alert("保存成功");
+          // 刷新页面，让后端 Session 更新后的数据重新渲染到页面上
+          location.reload();
+        } else {
+          alert("保存失败：" + res.msg);
+        }
+      }
+    });
+  }
+</script>
+</body>
+</html>
