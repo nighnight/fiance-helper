@@ -41,24 +41,37 @@ public class SysUserServiceImpl implements SysUserService {
         return Result.success("登录成功");
     }
 
+    // 用户名/昵称只允许中英文、数字、下划线
+    private static final String USERNAME_REGEX = "^[a-zA-Z0-9_一-龥]+$";
+
     @Override
     public Result register(SysUser sysUser) {
-        // 1. 检查用户名是否已存在
+        // 1. 校验用户名格式（Bug-02 修复：防止注入）
+        if (sysUser.getUsername() == null || !sysUser.getUsername().matches(USERNAME_REGEX)) {
+            return Result.error("用户名只能包含中英文、数字和下划线");
+        }
+        // 2. 校验昵称格式
+        if (sysUser.getNickname() != null && !sysUser.getNickname().isEmpty()
+                && !sysUser.getNickname().matches(USERNAME_REGEX)) {
+            return Result.error("昵称只能包含中英文、数字和下划线");
+        }
+
+        // 3. 检查用户名是否已存在
         SysUser existUser = sysUserMapper.selectByUsername(sysUser.getUsername());
         if (existUser != null) {
             return Result.error("用户名已存在");
         }
 
-        // 2. 密码加密
+        // 4. 密码加密
         String encodedPassword = passwordEncoder.encode(sysUser.getPassword());
         sysUser.setPassword(encodedPassword);
 
-        // 3. 设置默认昵称（如果没填）
+        // 5. 设置默认昵称（如果没填）
         if (sysUser.getNickname() == null || sysUser.getNickname().isEmpty()) {
             sysUser.setNickname("用户" + System.currentTimeMillis());
         }
 
-        // 4. 插入数据库
+        // 6. 插入数据库
         sysUserMapper.insert(sysUser);
         return Result.success("注册成功");
     }

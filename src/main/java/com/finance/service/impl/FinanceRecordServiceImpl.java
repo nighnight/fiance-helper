@@ -1,6 +1,7 @@
 package com.finance.service.impl;
 
 import com.finance.dto.FinanceRecordDTO;
+import com.finance.exception.BusinessException;
 import com.finance.mapper.AccountMapper;
 import com.finance.mapper.FinanceRecordMapper;
 import com.finance.po.Account;
@@ -99,12 +100,16 @@ public class FinanceRecordServiceImpl implements FinanceRecordService {
      */
     private void updateAccountBalance(Long accountId, BigDecimal amount, Integer type) {
         Account account = accountMapper.selectById(accountId);
-        if (account == null) throw new RuntimeException("账户不存在");
+        if (account == null) throw new BusinessException("账户不存在");
 
         BigDecimal current = account.getCurrentBalance();
         if (type == 1) {
             current = current.add(amount);
         } else {
+            // Bug-01 修复：支出前校验余额是否充足
+            if (current.compareTo(amount) < 0) {
+                throw new BusinessException("账户余额不足，无法完成支出");
+            }
             current = current.subtract(amount);
         }
         account.setCurrentBalance(current);
