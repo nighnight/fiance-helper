@@ -9,8 +9,9 @@ stages:
       - step: build@maven
         name: build_maven
         displayName: Maven 编译
-        jdkVersion: 17
-        mavenVersion: 3.6.3
+        inputs:
+          jdkVersion: 17
+          mavenVersion: 3.6.3
         commands:
           - mvn -B clean compile
 

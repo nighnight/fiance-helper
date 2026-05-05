@@ -9,8 +9,9 @@ stages:
       - step: build@maven
         name: build_and_test
         displayName: 编译并运行单元测试
-        jdkVersion: 17
-        mavenVersion: 3.6.3
+        inputs:
+          jdkVersion: 17
+          mavenVersion: 3.6.3
         commands:
           - mvn -B clean test jacoco:report
         artifacts:
