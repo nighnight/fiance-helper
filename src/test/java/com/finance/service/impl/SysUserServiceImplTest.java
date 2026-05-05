@@ -66,7 +66,7 @@ class SysUserServiceImplTest {
         Result result = userService.register(user2);
 
         assertThat(result.getCode()).isNotEqualTo(200);
-        assertThat(result.getMessage()).contains("已存在");
+        assertThat(result.getMsg()).contains("已存在");
     }
 
     @Test
@@ -80,7 +80,7 @@ class SysUserServiceImplTest {
         Result result = userService.register(user);
 
         assertThat(result.getCode()).isNotEqualTo(200);
-        assertThat(result.getMessage()).contains("只能包含");
+        assertThat(result.getMsg()).contains("只能包含");
     }
 
     @Test
@@ -94,7 +94,7 @@ class SysUserServiceImplTest {
         Result result = userService.register(user);
 
         assertThat(result.getCode()).isNotEqualTo(200);
-        assertThat(result.getMessage()).contains("只能包含");
+        assertThat(result.getMsg()).contains("只能包含");
     }
 
     @Test
@@ -124,7 +124,7 @@ class SysUserServiceImplTest {
         Result result = userService.login("zhaoliu", "wrongpassword", session);
 
         assertThat(result.getCode()).isNotEqualTo(200);
-        assertThat(result.getMessage()).contains("密码错误");
+        assertThat(result.getMsg()).contains("密码错误");
     }
 
     @Test
@@ -133,7 +133,7 @@ class SysUserServiceImplTest {
         Result result = userService.login("notexist", "123456", session);
 
         assertThat(result.getCode()).isNotEqualTo(200);
-        assertThat(result.getMessage()).contains("不存在");
+        assertThat(result.getMsg()).contains("不存在");
     }
 
     @Test
