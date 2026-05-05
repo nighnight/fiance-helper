@@ -18,7 +18,7 @@ public class SysUserController {
     @Autowired
     private SysUserService sysUserService;
 
-    // ==================== 1. 页面跳转 (GET 请求) ====================
+
 
     @Operation(summary = "跳转：登录页", hidden = true)
     @GetMapping("/login")  // 浏览器访问地址: http://localhost:8080/user/login
