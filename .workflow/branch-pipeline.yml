@@ -1,0 +1,28 @@
+version: '1.0'
+name: branch-pipeline
+displayName: BranchPipeline
+stages:
+  - stage:
+    name: compile
+    displayName: 编译检查
+    steps:
+      - step: build@maven
+        name: build_maven
+        displayName: Maven 编译
+        inputs:
+          jdkVersion: 11
+          mavenVersion: 3.6.3
+        commands:
+          - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
+          - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          - export PATH=$JAVA_HOME/bin:$PATH
+          - java -version
+          - mvn -B clean compile
+
+triggers:
+  push:
+    branches:
+      exclude:
+        - master
+      include:
+        - .*

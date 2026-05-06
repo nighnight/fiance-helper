@@ -1,0 +1,80 @@
+version: '1.0'
+name: master-pipeline
+displayName: MasterPipeline
+stages:
+  - stage:
+    name: compile
+    displayName: 编译
+    steps:
+      - step: build@maven
+        name: compile
+        displayName: 编译项目
+        inputs:
+          jdkVersion: 11
+          mavenVersion: 3.6.3
+        commands:
+          - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
+          - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          - export PATH=$JAVA_HOME/bin:$PATH
+          - java -version
+          - mvn -B compile
+
+  - stage:
+    name: unit-test
+    displayName: 代码级测试（质量门禁）
+    steps:
+      - step: build@maven
+        name: build_and_test
+        displayName: 编译测试并生成覆盖率报告
+        inputs:
+          jdkVersion: 11
+          mavenVersion: 3.6.3
+        commands:
+          - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
+          - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          - export PATH=$JAVA_HOME/bin:$PATH
+          - java -version
+          - mvn -B clean test jacoco:report
+        artifacts:
+          - name: TEST_REPORT
+            path:
+              - ./target/surefire-reports
+              - ./target/site/jacoco
+      - step: publish@general_artifacts
+        name: publish_test_reports
+        displayName: 上传测试报告
+        dependArtifact: TEST_REPORT
+        artifactName: test-reports
+        dependsOn: build_and_test
+
+  - stage:
+    name: integration-test
+    displayName: 客户侧回归测试（API/CLI）
+    steps:
+      - step: build@maven
+        name: package_and_smoke_test
+        displayName: 打包并运行CLI回归测试
+        inputs:
+          jdkVersion: 11
+          mavenVersion: 3.6.3
+        commands:
+          - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
+          - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+          - export PATH=$JAVA_HOME/bin:$PATH
+          - java -version
+          - mvn -B package -DskipTests
+          - APP_JAR=$(ls target/*.jar | grep -v original | head -1)
+          - echo "Starting application: $APP_JAR"
+          - nohup java -jar "$APP_JAR" --spring.profiles.active=test > app.log 2>&1 &
+          - APP_PID=$!
+          - sleep 30
+          - bash scripts/api-smoke-test.sh
+          - TEST_RESULT=$?
+          - kill $APP_PID || true
+          - exit $TEST_RESULT
+
+triggers:
+  push:
+    branches:
+      include:
+        - master
