@@ -9,8 +9,8 @@ stages:
       - step: shell@agent
         name: build_and_test
         displayName: 编译并运行单元测试
-        commands:
-          - |
+        inputs:
+          script: |
             set -e
             echo "Downloading OpenJDK 17..."
             curl -fsSL -o /tmp/openjdk-17.tar.gz https://repo.huaweicloud.com/openjdk/17/openjdk-17_linux-x64_bin.tar.gz
