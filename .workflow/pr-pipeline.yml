@@ -6,12 +6,10 @@ stages:
     name: unit-test
     displayName: 代码级测试（PR 门禁）
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: build_and_test
         displayName: 编译并运行单元测试
-        inputs:
-          jdkVersion: 17
-          mavenVersion: 3.6.3
+        image: maven:3.9-eclipse-temurin-17
         commands:
           - mvn -B clean test jacoco:report
         artifacts:
@@ -27,7 +25,7 @@ stages:
         dependsOn: build_and_test
 
 triggers:
-  pr:
+  pullRequest:
     branches:
       include:
         - master

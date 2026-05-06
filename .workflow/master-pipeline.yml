@@ -6,12 +6,10 @@ stages:
     name: compile
     displayName: 编译
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: compile
         displayName: 编译项目
-        inputs:
-          jdkVersion: 17
-          mavenVersion: 3.6.3
+        image: maven:3.9-eclipse-temurin-17
         commands:
           - mvn -B compile
 
@@ -19,12 +17,10 @@ stages:
     name: unit-test
     displayName: 代码级测试（质量门禁）
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: build_and_test
         displayName: 编译测试并生成覆盖率报告
-        inputs:
-          jdkVersion: 17
-          mavenVersion: 3.6.3
+        image: maven:3.9-eclipse-temurin-17
         commands:
           - java -version
           - mvn -B clean test jacoco:report
@@ -44,12 +40,10 @@ stages:
     name: integration-test
     displayName: 客户侧回归测试（API/CLI）
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: package_app
         displayName: 打包可运行 JAR
-        inputs:
-          jdkVersion: 17
-          mavenVersion: 3.6.3
+        image: maven:3.9-eclipse-temurin-17
         commands:
           - mvn -B package -DskipTests
         artifacts:
@@ -61,20 +55,20 @@ stages:
         displayName: 启动应用并运行 CLI 回归测试
         dependsOn: package_app
         dependArtifact: JAR_ARTIFACT
-        inputs:
-          script: |
-            APP_JAR=$(ls target/*.jar | grep -v original | head -1)
-            echo "Starting application: $APP_JAR"
-            nohup java -jar "$APP_JAR" --spring.profiles.active=test > app.log 2>&1 &
-            APP_PID=$!
-            echo "Waiting for app startup..."
-            sleep 30
-            echo "Running API smoke tests..."
-            bash scripts/api-smoke-test.sh
-            TEST_RESULT=$?
-            echo "Killing application (PID: $APP_PID)"
-            kill $APP_PID || true
-            exit $TEST_RESULT
+        image: maven:3.9-eclipse-temurin-17
+        commands:
+          - APP_JAR=$(ls target/*.jar | grep -v original | head -1)
+          - echo "Starting application: $APP_JAR"
+          - nohup java -jar "$APP_JAR" --spring.profiles.active=test > app.log 2>&1 &
+          - APP_PID=$!
+          - echo "Waiting for app startup..."
+          - sleep 30
+          - echo "Running API smoke tests..."
+          - bash scripts/api-smoke-test.sh
+          - TEST_RESULT=$?
+          - echo "Killing application (PID: $APP_PID)"
+          - kill $APP_PID || true
+          - exit $TEST_RESULT
 
 triggers:
   push:
