@@ -1,0 +1,278 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "finance-helper",
+    "description": "个人财务管理系统 API",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "本地环境"
+    }
+  ],
+  "paths": {
+    "/user/register": {
+      "post": {
+        "tags": ["用户管理"],
+        "summary": "用户注册",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "zhangsan" },
+                  "password": { "type": "string", "example": "123456" },
+                  "nickname": { "type": "string", "example": "张三" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "tags": ["用户管理"],
+        "summary": "用户登录",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": { "type": "string", "example": "zhangsan" },
+                  "password": { "type": "string", "example": "123456" }
+                },
+                "required": ["username", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/record": {
+      "post": {
+        "tags": ["收支记录"],
+        "summary": "新增记录",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceRecordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["收支记录"],
+        "summary": "修改记录",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FinanceRecordDTO"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/record/list": {
+      "get": {
+        "tags": ["收支记录"],
+        "summary": "查询记录列表（分页）",
+        "parameters": [
+          {
+            "name": "pageNum",
+            "in": "query",
+            "schema": { "type": "integer", "default": 1 }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": { "type": "integer", "default": 10 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/record/{id}": {
+      "get": {
+        "tags": ["收支记录"],
+        "summary": "根据ID查询记录",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["收支记录"],
+        "summary": "删除记录",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/record/export": {
+      "get": {
+        "tags": ["收支记录"],
+        "summary": "导出Excel",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/chart/data": {
+      "get": {
+        "tags": ["统计图表"],
+        "summary": "图表数据",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "query",
+            "schema": { "type": "string", "example": "2026-05" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Result": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer" },
+          "msg": { "type": "string" },
+          "data": { "type": "object" }
+        }
+      },
+      "FinanceRecordDTO": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "description": "修改时必填" },
+          "type": { "type": "integer", "description": "1-收入 2-支出", "example": 1 },
+          "amount": { "type": "number", "example": 500 },
+          "accountId": { "type": "integer", "example": 1 },
+          "categoryId": { "type": "integer", "example": 1 },
+          "recordDate": { "type": "string", "format": "date", "example": "2026-05-06" }
+        },
+        "required": ["type", "amount", "accountId", "categoryId", "recordDate"]
+      }
+    }
+  }
+}

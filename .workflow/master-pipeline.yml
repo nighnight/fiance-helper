@@ -3,16 +3,30 @@ name: master-pipeline
 displayName: MasterPipeline
 stages:
   - stage:
+    name: compile
+    displayName: 编译
+    steps:
+      - step: build@maven
+        name: compile
+        displayName: 编译项目
+        inputs:
+          jdkVersion: 17
+          mavenVersion: 3.6.3
+        commands:
+          - mvn -B compile
+
+  - stage:
     name: unit-test
     displayName: 代码级测试（质量门禁）
     steps:
       - step: build@maven
         name: build_and_test
-        displayName: 编译并运行单元测试
+        displayName: 编译测试并生成覆盖率报告
         inputs:
           jdkVersion: 17
           mavenVersion: 3.6.3
         commands:
+          - java -version
           - mvn -B clean test jacoco:report
         artifacts:
           - name: TEST_REPORT
@@ -28,11 +42,11 @@ stages:
 
   - stage:
     name: integration-test
-    displayName: 客户侧回归测试
+    displayName: 客户侧回归测试（API/CLI）
     steps:
       - step: build@maven
         name: package_app
-        displayName: 打包应用
+        displayName: 打包可运行 JAR
         inputs:
           jdkVersion: 17
           mavenVersion: 3.6.3
@@ -44,18 +58,21 @@ stages:
               - ./target/*.jar
       - step: shell@agent
         name: run_smoke_tests
-        displayName: 启动应用并运行接口回归测试
+        displayName: 启动应用并运行 CLI 回归测试
         dependsOn: package_app
+        dependArtifact: JAR_ARTIFACT
         inputs:
           script: |
             APP_JAR=$(ls target/*.jar | grep -v original | head -1)
             echo "Starting application: $APP_JAR"
-            java -jar "$APP_JAR" --spring.profiles.active=test &
+            nohup java -jar "$APP_JAR" --spring.profiles.active=test > app.log 2>&1 &
             APP_PID=$!
+            echo "Waiting for app startup..."
             sleep 30
             echo "Running API smoke tests..."
             bash scripts/api-smoke-test.sh
             TEST_RESULT=$?
+            echo "Killing application (PID: $APP_PID)"
             kill $APP_PID || true
             exit $TEST_RESULT
 
