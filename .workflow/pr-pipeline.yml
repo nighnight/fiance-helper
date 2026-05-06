@@ -9,9 +9,16 @@ stages:
       - step: shell@agent
         name: build_and_test
         displayName: 编译并运行单元测试
-        image: maven:3.9-eclipse-temurin-17
         commands:
-          - mvn -B clean test jacoco:report
+          - |
+            set -e
+            echo "Downloading OpenJDK 17..."
+            curl -fsSL -o /tmp/openjdk-17.tar.gz https://repo.huaweicloud.com/openjdk/17/openjdk-17_linux-x64_bin.tar.gz
+            mkdir -p /tmp/openjdk-17 && tar -xzf /tmp/openjdk-17.tar.gz -C /tmp/openjdk-17 --strip-components=1
+            export JAVA_HOME=/tmp/openjdk-17
+            export PATH=$JAVA_HOME/bin:$PATH
+            java -version
+            mvn -B clean test jacoco:report
         artifacts:
           - name: TEST_REPORT
             path:
