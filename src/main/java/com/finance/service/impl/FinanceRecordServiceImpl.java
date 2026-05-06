@@ -1,7 +1,6 @@
 package com.finance.service.impl;
 
 import com.finance.dto.FinanceRecordDTO;
-import com.finance.exception.BusinessException;
 import com.finance.mapper.AccountMapper;
 import com.finance.mapper.FinanceRecordMapper;
 import com.finance.po.Account;
@@ -100,6 +99,7 @@ public class FinanceRecordServiceImpl implements FinanceRecordService {
      */
     private void updateAccountBalance(Long accountId, BigDecimal amount, Integer type) {
         Account account = accountMapper.selectById(accountId);
+<<<<<<< HEAD
         if (account == null) throw new BusinessException("账户不存在");
 
         BigDecimal current = account.getCurrentBalance();
