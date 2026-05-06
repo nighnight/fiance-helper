@@ -6,12 +6,9 @@ stages:
     name: compile
     displayName: 编译检查
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: build_maven
         displayName: Maven 编译
-        inputs:
-          jdkVersion: 11
-          mavenVersion: 3.6.3
         commands:
           - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
           - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64

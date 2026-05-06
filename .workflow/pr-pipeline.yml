@@ -6,12 +6,9 @@ stages:
     name: unit-test
     displayName: 代码级测试（PR 门禁）
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: build_and_test
         displayName: 编译并运行单元测试
-        inputs:
-          jdkVersion: 11
-          mavenVersion: 3.6.3
         commands:
           - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
           - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64

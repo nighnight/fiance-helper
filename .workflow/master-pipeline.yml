@@ -6,12 +6,9 @@ stages:
     name: compile
     displayName: 编译
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: compile
         displayName: 编译项目
-        inputs:
-          jdkVersion: 11
-          mavenVersion: 3.6.3
         commands:
           - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
           - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
@@ -23,12 +20,9 @@ stages:
     name: unit-test
     displayName: 代码级测试（质量门禁）
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: build_and_test
         displayName: 编译测试并生成覆盖率报告
-        inputs:
-          jdkVersion: 11
-          mavenVersion: 3.6.3
         commands:
           - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
           - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
@@ -51,12 +45,9 @@ stages:
     name: integration-test
     displayName: 客户侧回归测试（API/CLI）
     steps:
-      - step: build@maven
+      - step: shell@agent
         name: package_and_smoke_test
         displayName: 打包并运行CLI回归测试
-        inputs:
-          jdkVersion: 11
-          mavenVersion: 3.6.3
         commands:
           - apt-get update && apt-get install -y openjdk-17-jdk ca-certificates-java
           - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
