@@ -29,6 +29,15 @@ jobs:
   integration-test:
     needs: unit-test
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: "@2370547251"
+          MYSQL_DATABASE: finance_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -36,6 +45,10 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+    - name: Initialize Database
+      run: |
+        mysql -h 127.0.0.1 -P 3306 -u root -p"@2370547251" finance_db < src/test/resources/schema-h2.sql
+        mysql -h 127.0.0.1 -P 3306 -u root -p"@2370547251" finance_db < src/test/resources/data-h2.sql
     - name: Package Application
       run: mvn -B package -DskipTests
     - name: Run Smoke Tests
@@ -43,5 +56,11 @@ jobs:
         APP_JAR=$(ls target/*.jar | grep -v original | head -1)
         echo "Starting application: $APP_JAR"
         nohup java -jar "$APP_JAR" --spring.profiles.active=test > app.log 2>&1 &
+        APP_PID=$!
         sleep 30
         bash scripts/api-smoke-test.sh
+        TEST_RESULT=$?
+        echo "=== Application Log ==="
+        cat app.log || true
+        kill $APP_PID || true
+        exit $TEST_RESULT
